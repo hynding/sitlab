@@ -1,0 +1,56 @@
+{
+  "kind": "collectionType",
+  "collectionName": "sources",
+  "info": {
+    "singularName": "source",
+    "pluralName": "sources",
+    "displayName": "Source",
+    "description": "Researched public material a story draws on"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "url": {
+      "type": "string",
+      "regex": "^https?://"
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": [
+        "article",
+        "book",
+        "dataset",
+        "image",
+        "video",
+        "audio",
+        "archive",
+        "other"
+      ],
+      "default": "article"
+    },
+    "publisher": {
+      "type": "string"
+    },
+    "license": {
+      "type": "string"
+    },
+    "accessedOn": {
+      "type": "date"
+    },
+    "notes": {
+      "type": "text"
+    },
+    "stories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::story.story",
+      "mappedBy": "sources"
+    }
+  }
+}

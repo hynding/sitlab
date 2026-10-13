@@ -1,0 +1,72 @@
+{
+  "kind": "collectionType",
+  "collectionName": "characters",
+  "info": {
+    "singularName": "character",
+    "pluralName": "characters",
+    "displayName": "Character",
+    "description": "A character, with traits and backstory"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name"
+    },
+    "role": {
+      "type": "enumeration",
+      "enum": [
+        "protagonist",
+        "antagonist",
+        "deuteragonist",
+        "supporting",
+        "minor"
+      ],
+      "default": "supporting"
+    },
+    "summary": {
+      "type": "text"
+    },
+    "backstory": {
+      "type": "blocks"
+    },
+    "portrait": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "traits": {
+      "type": "component",
+      "repeatable": true,
+      "component": "story.trait"
+    },
+    "stories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::story.story",
+      "mappedBy": "characters"
+    },
+    "scenes": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::scene.scene",
+      "mappedBy": "characters"
+    },
+    "arcs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::character-arc.character-arc",
+      "mappedBy": "character"
+    }
+  }
+}

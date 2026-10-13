@@ -1,0 +1,32 @@
+{
+    "name": "sitlab/cms-php",
+    "description": "Sitlab CMS on strapi-php",
+    "type": "project",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/hynding/strapi-php",
+            "no-api": true
+        }
+    ],
+    "require": {
+        "php": ">=8.3",
+        "ext-pdo_sqlite": "*",
+        "hynding/strapi-php": "dev-main as 5.56.0-beta.1"
+    },
+    "scripts": {
+        "build": "@php bin/strapi build",
+        "develop": "@php bin/strapi develop",
+        "dev": "@php bin/strapi develop",
+        "console": "@php bin/strapi console",
+        "start": "@php bin/strapi start",
+        "strapi": "@php bin/strapi"
+    },
+    "config": {
+        "sort-packages": true,
+        "process-timeout": 0,
+        "allow-plugins": false
+    },
+    "minimum-stability": "beta",
+    "prefer-stable": true
+}

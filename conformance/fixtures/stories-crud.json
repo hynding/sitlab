@@ -1,0 +1,126 @@
+{
+  "description": "Create, read, filter, update and delete a story",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "The Lighthouse {{run}}",
+            "logline": "A keeper finds a letter from the future.",
+            "genre": "mystery"
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": {
+          "data": {
+            "title": "The Lighthouse {{run}}",
+            "format": "feature",
+            "status": "idea",
+            "genre": "mystery",
+            "slug": null
+          }
+        }
+      },
+      "save": {
+        "story": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "documentId": "{{story}}",
+            "title": "The Lighthouse {{run}}"
+          },
+          "meta": {}
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories?filters[title][$endsWith]={{run}}&fields[0]=title&fields[1]=status"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "$keys": [
+                "id",
+                "documentId",
+                "title",
+                "status"
+              ],
+              "title": "The Lighthouse {{run}}"
+            }
+          ],
+          "meta": {
+            "pagination": {
+              "page": 1,
+              "pageSize": 25,
+              "pageCount": 1,
+              "total": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/stories/{{story}}",
+        "body": {
+          "data": {
+            "status": "outline",
+            "format": "series"
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "status": "outline",
+            "format": "series",
+            "title": "The Lighthouse {{run}}"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 404,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 404,
+            "name": "NotFoundError"
+          }
+        }
+      }
+    }
+  ]
+}

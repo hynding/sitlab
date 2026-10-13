@@ -1,0 +1,17 @@
+{
+  "name": "sitlab",
+  "private": true,
+  "description": "A creative-lab PWA for developing characters, stories, plot lines and screenplays, on strapi-php with a Strapi twin",
+  "scripts": {
+    "setup": "node scripts/init-env.mjs && composer --working-dir=apps/cms-php install && npm --prefix apps/cms-php install && npm --prefix apps/cms-node install && npm --prefix apps/web install",
+    "dev:php": "cd apps/cms-php && php bin/strapi develop",
+    "dev:node": "npm --prefix apps/cms-node run develop",
+    "dev:web": "npm --prefix apps/web run dev",
+    "schema:sync": "node scripts/sync-schema.mjs",
+    "schema:check": "node scripts/sync-schema.mjs --check",
+    "conformance": "node conformance/run.mjs"
+  },
+  "engines": {
+    "node": ">=20.0.0 <=26.x.x"
+  }
+}

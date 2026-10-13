@@ -1,0 +1,30 @@
+{
+  "collectionName": "components_story_beats",
+  "info": {
+    "displayName": "Beat",
+    "icon": "bulletList",
+    "description": "One beat of a plot line or arc"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "mood": {
+      "type": "enumeration",
+      "enum": [
+        "humor",
+        "drama",
+        "tension",
+        "release",
+        "romance",
+        "neutral"
+      ],
+      "default": "neutral"
+    }
+  }
+}
