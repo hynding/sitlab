@@ -1,0 +1,66 @@
+{
+  "kind": "collectionType",
+  "collectionName": "scenes",
+  "info": {
+    "singularName": "scene",
+    "pluralName": "scenes",
+    "displayName": "Scene",
+    "description": "A scene, with its storyboard and screenplay text"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "position": {
+      "type": "integer",
+      "min": 0
+    },
+    "location": {
+      "type": "string"
+    },
+    "timeOfDay": {
+      "type": "enumeration",
+      "enum": [
+        "day",
+        "night",
+        "dawn",
+        "dusk",
+        "continuous"
+      ]
+    },
+    "summary": {
+      "type": "text"
+    },
+    "screenplay": {
+      "type": "text"
+    },
+    "story": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::story.story",
+      "inversedBy": "scenes"
+    },
+    "plotLines": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::plot-line.plot-line",
+      "inversedBy": "scenes"
+    },
+    "characters": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::character.character",
+      "inversedBy": "scenes"
+    },
+    "storyboard": {
+      "type": "component",
+      "repeatable": true,
+      "component": "story.storyboard-frame"
+    }
+  }
+}

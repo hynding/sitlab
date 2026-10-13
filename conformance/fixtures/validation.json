@@ -1,0 +1,86 @@
+{
+  "description": "Invalid input is a 400 ValidationError",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "logline": "No title"
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Bad format {{run}}",
+            "format": "opera"
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "Bad url {{run}}",
+            "url": "ftp://example.org"
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories?filters[nope][$eq]=1"
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError"
+          }
+        }
+      }
+    }
+  ]
+}

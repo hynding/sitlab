@@ -1,0 +1,144 @@
+{
+  "description": "Sorting and page-based pagination over research sources",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "A {{run}}",
+            "kind": "book",
+            "url": "https://example.org/a"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "a": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "B {{run}}",
+            "kind": "dataset",
+            "accessedOn": "2026-10-01"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "b": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "C {{run}}",
+            "kind": "archive"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "c": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/sources?filters[title][$endsWith]={{run}}&sort=title:desc&pagination[page]=1&pagination[pageSize]=2&fields[0]=title"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "title": "C {{run}}"
+            },
+            {
+              "title": "B {{run}}"
+            }
+          ],
+          "meta": {
+            "pagination": {
+              "page": 1,
+              "pageSize": 2,
+              "pageCount": 2,
+              "total": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/sources?filters[title][$endsWith]={{run}}&filters[kind][$in][0]=book&filters[kind][$in][1]=dataset&sort[0]=title:asc&pagination[start]=0&pagination[limit]=10"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "title": "A {{run}}",
+              "kind": "book"
+            },
+            {
+              "title": "B {{run}}",
+              "kind": "dataset",
+              "accessedOn": "2026-10-01"
+            }
+          ],
+          "meta": {
+            "pagination": {
+              "start": 0,
+              "limit": 10,
+              "total": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/sources/{{a}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/sources/{{b}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/sources/{{c}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "kind": "collectionType",
+  "collectionName": "plot_lines",
+  "info": {
+    "singularName": "plot-line",
+    "pluralName": "plot-lines",
+    "displayName": "Plot line",
+    "description": "An A/B/C plot, subplot or running gag within a story"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": [
+        "a-plot",
+        "b-plot",
+        "c-plot",
+        "subplot",
+        "runner"
+      ],
+      "default": "a-plot"
+    },
+    "summary": {
+      "type": "text"
+    },
+    "story": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::story.story",
+      "inversedBy": "plotLines"
+    },
+    "beats": {
+      "type": "component",
+      "repeatable": true,
+      "component": "story.beat"
+    },
+    "scenes": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::scene.scene",
+      "mappedBy": "plotLines"
+    }
+  }
+}

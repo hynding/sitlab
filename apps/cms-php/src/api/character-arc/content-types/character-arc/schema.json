@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "character_arcs",
+  "info": {
+    "singularName": "character-arc",
+    "pluralName": "character-arcs",
+    "displayName": "Character arc",
+    "description": "How one character changes over one story"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "character": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::character.character",
+      "inversedBy": "arcs"
+    },
+    "story": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::story.story"
+    },
+    "startState": {
+      "type": "text"
+    },
+    "endState": {
+      "type": "text"
+    },
+    "beats": {
+      "type": "component",
+      "repeatable": true,
+      "component": "story.beat"
+    }
+  }
+}

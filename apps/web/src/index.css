@@ -1,0 +1,105 @@
+:root {
+  --text: #2b2738;
+  --muted: #6b6375;
+  --bg: #faf9f6;
+  --surface: #fff;
+  --border: #e5e4e7;
+  --accent: #6d3bd6;
+
+  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #ece9f3;
+    --muted: #9ca3af;
+    --bg: #16141d;
+    --surface: #1f1b2e;
+    --border: #2e2a3a;
+    --accent: #b38cff;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+h1 {
+  margin: 0.5rem 0;
+  color: var(--accent);
+}
+
+form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+input {
+  flex: 1 1 12rem;
+}
+
+button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+[role='alert'] {
+  color: #c2410c;
+}
+
+.stories {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.stories li {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.stories .meta {
+  display: block;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.stories p {
+  margin: 0.25rem 0 0;
+}

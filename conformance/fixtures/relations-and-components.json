@@ -1,0 +1,318 @@
+{
+  "description": "Characters, plot lines with beats and scenes, populated from a story",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Mara {{run}}",
+            "role": "protagonist",
+            "traits": [
+              {
+                "label": "Flaw",
+                "value": "Never asks for help"
+              },
+              {
+                "label": "Want",
+                "value": "To leave the island"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": {
+          "data": {
+            "name": "Mara {{run}}",
+            "role": "protagonist"
+          }
+        }
+      },
+      "save": {
+        "mara": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Tobias {{run}}",
+            "role": "antagonist"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "tobias": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Saltwater {{run}}",
+            "characters": [
+              "{{mara}}",
+              "{{tobias}}"
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "story": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/plot-lines",
+        "body": {
+          "data": {
+            "title": "Escape {{run}}",
+            "kind": "a-plot",
+            "story": "{{story}}",
+            "beats": [
+              {
+                "title": "Inciting letter",
+                "mood": "tension"
+              },
+              {
+                "title": "Failed crossing",
+                "mood": "drama"
+              },
+              {
+                "title": "The goat incident",
+                "mood": "humor"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "plot": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes",
+        "body": {
+          "data": {
+            "title": "Harbour at dawn {{run}}",
+            "position": 1,
+            "timeOfDay": "dawn",
+            "story": "{{story}}",
+            "characters": {
+              "connect": [
+                "{{mara}}"
+              ]
+            },
+            "plotLines": [
+              "{{plot}}"
+            ],
+            "storyboard": [
+              {
+                "caption": "Fog over the pier",
+                "shot": "wide"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "scene": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}?populate[characters][fields][0]=name&populate[characters][sort][0]=name:asc&populate[plotLines][populate][0]=beats&populate[scenes][populate]=*"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "title": "Saltwater {{run}}",
+            "characters": [
+              {
+                "$keys": [
+                  "id",
+                  "documentId",
+                  "name"
+                ],
+                "name": "Mara {{run}}"
+              },
+              {
+                "name": "Tobias {{run}}"
+              }
+            ],
+            "plotLines": [
+              {
+                "title": "Escape {{run}}",
+                "beats": [
+                  {
+                    "title": "Inciting letter",
+                    "mood": "tension"
+                  },
+                  {
+                    "title": "Failed crossing"
+                  },
+                  {
+                    "title": "The goat incident",
+                    "mood": "humor"
+                  }
+                ]
+              }
+            ],
+            "scenes": [
+              {
+                "title": "Harbour at dawn {{run}}",
+                "storyboard": [
+                  {
+                    "caption": "Fog over the pier",
+                    "shot": "wide"
+                  }
+                ],
+                "characters": [
+                  {
+                    "name": "Mara {{run}}"
+                  }
+                ],
+                "plotLines": [
+                  {
+                    "title": "Escape {{run}}"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/characters/{{mara}}?populate=traits"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "traits": [
+              {
+                "label": "Flaw",
+                "value": "Never asks for help"
+              },
+              {
+                "label": "Want",
+                "value": "To leave the island"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{scene}}",
+        "body": {
+          "data": {
+            "characters": {
+              "connect": [
+                "{{tobias}}"
+              ],
+              "disconnect": [
+                "{{mara}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/scenes/{{scene}}?populate[characters][fields][0]=name"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "characters": [
+              {
+                "name": "Tobias {{run}}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/scenes/{{scene}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/plot-lines/{{plot}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{mara}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{tobias}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    }
+  ]
+}

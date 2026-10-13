@@ -1,0 +1,34 @@
+{
+  "collectionName": "components_story_storyboard_frames",
+  "info": {
+    "displayName": "Storyboard frame",
+    "icon": "picture",
+    "description": "One frame of a scene's storyboard"
+  },
+  "options": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "caption": {
+      "type": "text"
+    },
+    "shot": {
+      "type": "enumeration",
+      "enum": [
+        "wide",
+        "medium",
+        "close-up",
+        "extreme-close-up",
+        "over-the-shoulder",
+        "pov",
+        "insert"
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "description": "The content API is closed to the public by default",
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories"
+      },
+      "expect": {
+        "status": 403,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 403,
+            "name": "ForbiddenError",
+            "message": "Forbidden"
+          }
+        }
+      },
+      "auth": "none"
+    }
+  ]
+}

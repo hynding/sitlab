@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_story_traits",
+  "info": {
+    "displayName": "Trait",
+    "icon": "user",
+    "description": "A named trait, e.g. Flaw: impatient"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "value": {
+      "type": "text"
+    }
+  }
+}
