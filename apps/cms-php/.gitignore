@@ -130,6 +130,9 @@ vendor
 ############################
 
 .env
+.env.*
+!.env.example
+!.env.deploy.example
 license.txt
 exports
 .strapi

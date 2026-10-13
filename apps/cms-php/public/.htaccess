@@ -1,0 +1,18 @@
+# Apache (DreamHost shared hosting): every request that is not a file under public/ goes to the
+# front controller. The site's web directory must be this public/ folder, not the app root, so that
+# .env, vendor/ and config/ are never served.
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # PHP under FastCGI drops the Authorization header; pass it on so API tokens and admin JWTs work
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>

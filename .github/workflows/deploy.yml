@@ -1,0 +1,156 @@
+name: CI & Deploy
+
+# Pushing is the deploy: `dev` deploys the dev environment (api-dev / dev), `main` deploys
+# production (api / www). "Run workflow" on a branch redeploys it the same way. Setup and the
+# secrets each environment needs: docs/deploying.md.
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cms-php:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/cms-php
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, pdo_sqlite, intl, gd, mbstring
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node ../../scripts/sync-schema.mjs --check
+      - run: composer install --prefer-dist --no-interaction
+      - run: npm ci
+      - run: php bin/strapi build
+      # boots the app on SQLite: schema sync and migrations run as they will on the server
+      - name: Boot smoke test
+        run: |
+          cd ../.. && node scripts/init-env.mjs && cd apps/cms-php
+          php bin/strapi migrations:run
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  deploy:
+    needs: [cms-php, web]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+    concurrency: deploy-${{ github.ref_name == 'main' && 'production' || 'dev' }}
+    env:
+      PHP_BIN: ${{ vars.PHP_BIN || 'php' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, intl, gd, mbstring
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check configuration
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          API_PATH: ${{ secrets.API_PATH }}
+          WEB_PATH: ${{ secrets.WEB_PATH }}
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          missing=""
+          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY API_PATH WEB_PATH ENV_FILE API_URL; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::The ${{ github.ref_name == 'main' && 'production' || 'dev' }} environment is missing:$missing (see docs/deploying.md)"
+            exit 1
+          fi
+
+      - name: Build cms-php (vendor + admin panel)
+        working-directory: apps/cms-php
+        run: |
+          composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
+          npm ci
+          php bin/strapi build
+
+      - name: Build web
+        working-directory: apps/web
+        env:
+          VITE_CMS_PHP_URL: ${{ vars.API_URL }}
+          VITE_CMS_DEFAULT: php
+        run: |
+          npm ci
+          npm run build
+
+      - name: Set up SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          echo "SSH_TARGET=$DEPLOY_USER@$DEPLOY_HOST" >> "$GITHUB_ENV"
+
+      # .env, .tmp/ (bootstrap lock, SQLite) and public/uploads/ live only on the server.
+      # node_modules/ is only needed to build the admin panel, which ships as build/.
+      - name: Deploy cms-php
+        env:
+          API_PATH: ${{ secrets.API_PATH }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_deploy" \
+            --exclude '/.env' \
+            --exclude '/.env.*' \
+            --exclude '/.tmp/' \
+            --exclude '/public/uploads/' \
+            --exclude '/public/.well-known/' \
+            --exclude 'node_modules/' \
+            apps/cms-php/ "$SSH_TARGET:$API_PATH/"
+
+      - name: Write .env and run migrations
+        env:
+          API_PATH: ${{ secrets.API_PATH }}
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          printf '%s\n' "$ENV_FILE" | \
+            ssh -i ~/.ssh/id_deploy "$SSH_TARGET" "umask 077 && cat > '$API_PATH/.env'"
+          ssh -i ~/.ssh/id_deploy "$SSH_TARGET" "
+            set -e
+            cd '$API_PATH'
+            mkdir -p .tmp public/uploads
+            $PHP_BIN bin/strapi migrations:run
+          "
+
+      - name: Deploy web
+        env:
+          WEB_PATH: ${{ secrets.WEB_PATH }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_deploy" \
+            --exclude '/.well-known/' \
+            apps/web/dist/ "$SSH_TARGET:$WEB_PATH/"

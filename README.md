@@ -59,6 +59,9 @@ Both CMS apps use SQLite (`apps/*/.tmp/data.db`) for now. The deployed app will 
 `DATABASE_CLIENT=mysql` and the `DATABASE_*` connection variables; the Node app also needs the
 `mysql2` package then.
 
+`dev` and `main` deploy cms-php and the PWA to DreamHost through GitHub Actions; see
+[docs/deploying.md](docs/deploying.md).
+
 ## Changing the content model
 
 1. Edit `schema/` (or edit in one app's Content-Type Builder, then `node scripts/sync-schema.mjs --pull php`
