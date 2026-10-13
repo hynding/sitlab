@@ -12,7 +12,23 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+    # The deploy copies the admin bundle (build/) to public/admin/ so Apache serves its files without
+    # booting the app. /admin itself gets the bundle's index.html, as Strapi answers it (no redirect).
+    DirectorySlash Off
+    RewriteCond %{REQUEST_FILENAME}/index.html -f
+    RewriteRule ^admin/?$ admin/index.html [L]
+
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# Same caching as Strapi's admin handler: hashed bundle files for a year, index.html revalidated
+<IfModule mod_headers.c>
+    <If "%{REQUEST_URI} =~ m#^/admin/.+# && -f %{REQUEST_FILENAME}">
+        Header set Cache-Control "public, max-age=31536000"
+    </If>
+    <If "%{REQUEST_URI} =~ m#^/admin(/(index\.html)?)?$#">
+        Header set Cache-Control "no-cache"
+    </If>
 </IfModule>

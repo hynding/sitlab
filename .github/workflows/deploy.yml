@@ -95,6 +95,8 @@ jobs:
           composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
           npm ci
           php bin/strapi build
+          # Apache serves the bundle's files straight from public/admin (see public/.htaccess)
+          cp -R build public/admin
 
       - name: Build web
         working-directory: apps/web
