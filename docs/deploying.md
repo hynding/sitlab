@@ -69,16 +69,24 @@ build: anything `VITE_` ends up in the public JavaScript.
 
 ## ENV_FILE
 
-Start from `apps/cms-php/.env.deploy.example`: copy it to `apps/cms-php/.env.dev` and
-`apps/cms-php/.env.production` (both git-ignored), fill them in, and upload them:
+Generate one file per environment from `apps/cms-php/.env.deploy.example`, with fresh secrets and
+that environment's URL and database already filled in:
+
+```sh
+node scripts/init-env.mjs --deploy dev          # writes apps/cms-php/.env.dev
+node scripts/init-env.mjs --deploy production   # writes apps/cms-php/.env.production
+```
+
+Both files are git-ignored. Fill in `DATABASE_USERNAME` and `DATABASE_PASSWORD` in each, then upload
+them:
 
 ```sh
 gh secret set ENV_FILE --env dev        < apps/cms-php/.env.dev
 gh secret set ENV_FILE --env production < apps/cms-php/.env.production
 ```
 
-Generate the secrets once per environment, different for dev and production, and keep the files
-somewhere safe: rotating `ENCRYPTION_KEY` or `API_TOKEN_SALT` later breaks stored data and tokens.
+The script never overwrites an existing file. Keep both files somewhere safe (a password manager):
+rotating `ENCRYPTION_KEY` or `API_TOKEN_SALT` later breaks stored data and tokens.
 
 ## First deploy
 
