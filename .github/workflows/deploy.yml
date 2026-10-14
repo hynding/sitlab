@@ -83,7 +83,7 @@ jobs:
     environment: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
     concurrency: deploy-${{ github.ref_name == 'main' && 'production' || 'dev' }}
     env:
-      PHP_BIN: ${{ vars.PHP_BIN || 'php' }}
+      PHP_BIN: ${{ vars.PHP_BIN }}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -169,7 +169,11 @@ jobs:
             set -e
             cd '$API_PATH'
             mkdir -p .tmp public/uploads
-            $PHP_BIN bin/strapi migrations:run
+            # DreamHost's shell php can be older than the site's; prefer its 8.3 build when present
+            php='$PHP_BIN'
+            [ -n \"\$php\" ] || { [ -x /usr/local/php83/bin/php ] && php=/usr/local/php83/bin/php || php=php; }
+            \"\$php\" -v | head -n 1
+            \"\$php\" bin/strapi migrations:run
           "
 
       - name: Deploy web

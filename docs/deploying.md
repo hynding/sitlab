@@ -22,9 +22,10 @@ updates the tables for the content model.
    `domains/dev/sitlab/api-dev/public` and `domains/dev/sitlab/api/public`. Otherwise `.env` and
    `vendor/` sit in the web root. The two web sites keep their folder as is.
 2. **HTTPS** on all four sites (Let's Encrypt), with "Redirect HTTP to HTTPS" on.
-3. **PHP 8.3** on the two API sites. The deploy runs `bin/strapi` with the shell's `php`; if
-   `php -v` over SSH is not 8.3, set the `PHP_BIN` variable to `/usr/local/php83/bin/php`.
-   Over SSH, `php -m` must list `pdo_mysql`, `intl`, `gd`, `mbstring` and `sodium`.
+3. **PHP 8.3** on the two API sites. The site setting does not change the `php` command over SSH, so
+   the deploy runs `bin/strapi` with `/usr/local/php83/bin/php` (DreamHost's 8.3 build) when it exists,
+   otherwise with `php`. If neither is 8.3, set the `PHP_BIN` variable to a PHP 8.3 binary.
+   Over SSH, `/usr/local/php83/bin/php -m` must list `pdo_mysql`, `intl`, `gd`, `mbstring` and `sodium`.
 4. **MySQL** (Panel → MySQL Databases): `sitlab_dev` and `sitlab_prod` on `mysql.sitlab.dev`, each
    with its own user. To point a local cms-php at one, add your IP to that user's allowable hosts.
 5. **SSH deploy key**: the user that owns the sites needs shell (SSH) access. Make a key pair just for
@@ -62,7 +63,7 @@ Variables, in each environment:
 | Variable | dev | production |
 | --- | --- | --- |
 | `API_URL` | `https://api-dev.sitlab.dev` | `https://api.sitlab.dev` |
-| `PHP_BIN` | optional, default `php` | optional |
+| `PHP_BIN` | optional, default `/usr/local/php83/bin/php` if present, else `php` | optional |
 
 `API_URL` is compiled into the PWA as `VITE_CMS_PHP_URL`. Never set a `VITE_*_TOKEN` for a deployed
 build: anything `VITE_` ends up in the public JavaScript.
