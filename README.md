@@ -87,9 +87,6 @@ the two backends' responses are diffed with ids and timestamps masked.
 
 ### Known differences
 
-- **Enumeration error message** (`validation.json`, step 2): for an invalid enum value strapi-php
-  lists the allowed values ending in `null`, Strapi ends them with an empty string
-  (`…, comic, other, ` vs `…, comic, other, null`).
 - **Plugins enabled by default**: `hynding/strapi-php` is one package, so it also enables GraphQL,
   documentation and sentry, which a vanilla Node app does not have. `apps/cms-php/config/plugins.php`
   turns them off.
