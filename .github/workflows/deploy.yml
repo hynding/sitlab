@@ -37,6 +37,30 @@ jobs:
         run: |
           cd ../.. && node scripts/init-env.mjs && cd apps/cms-php
           php bin/strapi migrations:run
+      # the servers run MySQL: boot twice, as the first deploy and every later one do
+      - name: Boot smoke test (MySQL)
+        env:
+          DATABASE_CLIENT: mysql
+          DATABASE_HOST: 127.0.0.1
+          DATABASE_PORT: 3306
+          DATABASE_NAME: sitlab_ci
+          DATABASE_USERNAME: sitlab
+          DATABASE_PASSWORD: sitlab
+        run: |
+          php bin/strapi migrations:run
+          php bin/strapi migrations:run
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sitlab_ci
+          MYSQL_USER: sitlab
+          MYSQL_PASSWORD: sitlab
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
 
   web:
     runs-on: ubuntu-latest
