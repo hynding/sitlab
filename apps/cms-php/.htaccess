@@ -1,3 +1,0 @@
-# Safety net: the site's web directory should be public/ (docs/deploying.md). If it is set to the app
-# root by mistake, refuse every request rather than serve .env, vendor/ or config/.
-Require all denied
