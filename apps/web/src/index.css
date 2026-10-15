@@ -29,22 +29,59 @@ body {
 }
 
 main {
-  max-width: 48rem;
+  max-width: 64rem;
   margin: 0 auto;
   padding: 1rem;
 }
 
-header {
+a {
+  color: var(--accent);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.site-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+}
+
+.brand {
+  font-size: 1.375rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.site-header nav a {
+  text-decoration: none;
+}
+
+.site-header nav a[aria-current='page'] {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.backend {
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 
 h1 {
-  margin: 0.5rem 0;
-  color: var(--accent);
+  margin: 0.5rem 0 1rem;
 }
 
 form {
@@ -69,11 +106,105 @@ input {
   flex: 1 1 12rem;
 }
 
-button {
+button,
+a.button {
   background: var(--accent);
-  border-color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
   color: #fff;
   cursor: pointer;
+  padding: 0.4rem 0.9rem;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  button,
+  a.button {
+    color: #16141d;
+  }
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+button.link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  padding: 0;
+}
+
+form.stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+form.stacked label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.auth {
+  max-width: 24rem;
+  margin: 2rem auto;
+}
+
+.hero {
+  padding: 3rem 0 2rem;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1.15;
+  margin: 0 0 1rem;
+}
+
+.lead {
+  font-size: 1.2rem;
+  color: var(--muted);
+  max-width: 40rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.actions a.button {
+  padding: 0.6rem 1.2rem;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.features article {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.features h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem;
+}
+
+.features p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.how {
+  padding: 2rem 0;
 }
 
 [role='alert'] {

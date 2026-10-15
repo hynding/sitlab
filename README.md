@@ -59,6 +59,9 @@ Both CMS apps use SQLite (`apps/*/.tmp/data.db`) for now. The deployed app will 
 `DATABASE_CLIENT=mysql` and the `DATABASE_*` connection variables; the Node app also needs the
 `mysql2` package then.
 
+`dev` and `main` deploy cms-php and the PWA to DreamHost through GitHub Actions; see
+[docs/deploying.md](docs/deploying.md).
+
 ## Changing the content model
 
 1. Edit `schema/` (or edit in one app's Content-Type Builder, then `node scripts/sync-schema.mjs --pull php`
@@ -84,11 +87,9 @@ the two backends' responses are diffed with ids and timestamps masked.
 
 ### Known differences
 
-- **Enumeration error message** (`validation.json`, step 2): for an invalid enum value strapi-php
-  lists the allowed values ending in `null`, Strapi ends them with an empty string
-  (`…, comic, other, ` vs `…, comic, other, null`).
-- **Plugins enabled by default**: `hynding/strapi-php` is one package, so the PHP app also has GraphQL
-  (`/graphql`), documentation and sentry, which a vanilla Node app does not.
+- **Plugins enabled by default**: `hynding/strapi-php` is one package, so it also enables GraphQL,
+  documentation and sentry, which a vanilla Node app does not have. `apps/cms-php/config/plugins.php`
+  turns them off.
 
 ## Versions
 
