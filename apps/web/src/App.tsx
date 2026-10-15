@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { backends, CmsError, createStory, defaultBackend, listStories, type Backend, type Story } from './cms'
+import { availableBackends, backends, CmsError, createStory, defaultBackend, listStories, type Backend, type Story } from './cms'
 
 function App() {
   const [backend, setBackend] = useState<Backend>(defaultBackend)
@@ -52,7 +52,7 @@ function App() {
               setBackend(e.target.value as Backend)
             }}
           >
-            {(Object.keys(backends) as Backend[]).map((b) => (
+            {availableBackends.map((b) => (
               <option key={b} value={b}>
                 {backends[b].label}
               </option>
@@ -92,7 +92,10 @@ function App() {
 
 function describe(e: unknown, backend: Backend): string {
   if (e instanceof CmsError && (e.status === 401 || e.status === 403)) {
-    return `${backends[backend].label} refused the request (${e.status}). Set VITE_CMS_${backend.toUpperCase()}_TOKEN in apps/web/.env.local to an API token from its admin panel.`
+    // the token hint is for local development only; a deployed build never carries a token
+    return import.meta.env.DEV
+      ? `${backends[backend].label} refused the request (${e.status}). Set VITE_CMS_${backend.toUpperCase()}_TOKEN in apps/web/.env.local to an API token from its admin panel.`
+      : 'You do not have access to this yet.'
   }
   if (e instanceof CmsError) return `${backends[backend].label}: ${e.message}`
   return `${backends[backend].label} is not reachable at ${backends[backend].url}. Is it running?`

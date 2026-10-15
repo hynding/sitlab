@@ -17,6 +17,13 @@ export const backends: Record<Backend, { label: string; url: string; token: stri
   },
 }
 
+/** Deployed builds only offer the backends they were given a URL for (the Node app runs locally only). */
+const configured: Record<Backend, boolean> = {
+  php: Boolean(import.meta.env.VITE_CMS_PHP_URL),
+  node: Boolean(import.meta.env.VITE_CMS_NODE_URL),
+}
+export const availableBackends = (Object.keys(backends) as Backend[]).filter((b) => import.meta.env.DEV || configured[b])
+
 export const defaultBackend: Backend = import.meta.env.VITE_CMS_DEFAULT === 'node' ? 'node' : 'php'
 
 export type Story = {
