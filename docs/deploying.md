@@ -100,8 +100,13 @@ rotating `ENCRYPTION_KEY` or `API_TOKEN_SALT` later breaks stored data and token
      --email you@example.com --firstname Steve --password '<a strong password>'
    ```
 
-3. Give the PWA read access: Settings → Users & Permissions → Roles → Public, allow `find` and
-   `findOne` on the types it reads. Creating content from the PWA needs a signed-in user, which the
-   PWA does not have yet.
+3. Set what visitors and signed-in users may do: Settings → Users & Permissions → Roles.
+   - **Public**: allow `find` and `findOne` on the types the PWA reads (Story, Character,
+     Character-arc, Plot-line, Scene, Source).
+   - **Authenticated**: the same, plus `create` (and `update` / `delete` if users should edit) on
+     the types they write. Story is the only one the PWA writes so far.
+
+   Anyone can sign up from the PWA. To close sign-ups, turn off "Enable sign-ups" under
+   Settings → Users & Permissions → Advanced settings.
 4. Check https://api-dev.sitlab.dev/api/stories and https://dev.sitlab.dev, then repeat with `main`
    for production.
