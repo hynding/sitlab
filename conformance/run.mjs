@@ -2,27 +2,34 @@
 /**
  * Runs conformance/fixtures/*.json against both running CMS apps and compares them.
  *
- *   node conformance/run.mjs                 both backends (start them first)
- *   node conformance/run.mjs --only php      one backend
- *   node conformance/run.mjs stories-crud    only fixtures whose file name contains this
+ *   node conformance/run.mjs                    php and node (start them first)
+ *   node conformance/run.mjs --only php         one backend
+ *   node conformance/run.mjs --only php,camis   strapi-php and CAMIS
+ *   node conformance/run.mjs stories-crud       only fixtures whose file name contains this
  *
  * Environment:
- *   CMS_PHP_URL   default http://localhost:1337   (apps/cms-php, strapi-php)
- *   CMS_NODE_URL  default http://localhost:1338   (apps/cms-node, Strapi)
+ *   CMS_PHP_URL    default http://localhost:1337   (apps/cms-php, strapi-php)
+ *   CMS_NODE_URL   default http://localhost:1338   (apps/cms-node, Strapi)
+ *   CMS_CAMIS_URL  default http://localhost:1339   (apps/cms-camis, CAMIS)
+ *   CMS_<NAME>_TOKEN
+ *                 a full-access API token for that backend, used instead of signing in to its
+ *                 admin. CAMIS needs one (its admin is Filament, not Strapi's admin API): create it
+ *                 under Settings > API Tokens.
  *   CONFORMANCE_ADMIN_EMAIL / CONFORMANCE_ADMIN_PASSWORD
- *                 an admin of both apps. On a fresh database the first run registers it.
+ *                 an admin of the Strapi apps. On a fresh database the first run registers it.
  *
- * Each fixture is a list of steps: `request` (method, path, body), `expect` (status, body) and
- * optional `save` ({ name: "data.documentId" }) to reuse a value later as {{name}}. {{run}} is
- * unique per run, so fixtures can filter to their own rows. Matching rules are those of
- * strapi-php's examples/plugins/announcements runner:
+ * Each fixture is a list of steps: `request` (method, path, and a JSON `body` or a file `upload`),
+ * `expect` (status, body) and optional `save` ({ name: "data.documentId" }) to reuse a value later
+ * as {{name}}. {{run}} is unique per run, so fixtures can filter to their own rows. Matching rules
+ * are those of strapi-php's examples/plugins/announcements runner:
  *   objects  every expected key must match; extra keys are allowed unless `"$keys"` lists them all
  *   arrays   same length, matched element by element
  *   scalars  strict equality
  *
- * Besides `expect`, every step's response is compared between the two backends, with ids,
- * document ids and timestamps masked. A difference there is a strapi-php bug (or an upstream
- * quirk worth writing down) even when both pass `expect`.
+ * Besides `expect`, every step's response is compared with the reference backend's (node when it
+ * runs, otherwise the first one listed), with ids, document ids and timestamps masked. A
+ * difference there is a bug in the other backend (or an upstream quirk worth writing down) even
+ * when both pass `expect`.
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -31,15 +38,21 @@ import { fileURLToPath } from 'node:url';
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const args = process.argv.slice(2);
 const onlyIndex = args.indexOf('--only');
-const only = onlyIndex >= 0 ? args.splice(onlyIndex, 2)[1] : null;
+const only = onlyIndex >= 0 ? args.splice(onlyIndex, 2)[1].split(',') : ['php', 'node'];
 const filter = args[0] ?? '';
 
-const backends = Object.entries({
+const urls = {
   php: process.env.CMS_PHP_URL ?? 'http://localhost:1337',
   node: process.env.CMS_NODE_URL ?? 'http://localhost:1338',
-})
-  .filter(([name]) => !only || name === only)
-  .map(([name, url]) => ({ name, url: url.replace(/\/$/, '') }));
+  camis: process.env.CMS_CAMIS_URL ?? 'http://localhost:1339',
+};
+for (const name of only) if (!(name in urls)) throw new Error(`--only: unknown backend ${name} (php, node, camis)`);
+const backends = only.map((name) => ({
+  name,
+  url: urls[name].replace(/\/$/, ''),
+  givenToken: process.env[`CMS_${name.toUpperCase()}_TOKEN`],
+}));
+const reference = backends.find((b) => b.name === 'node') ?? backends[0];
 
 const admin = {
   email: process.env.CONFORMANCE_ADMIN_EMAIL ?? 'admin@sitlab.local',
@@ -59,6 +72,11 @@ async function json(url, init = {}) {
 }
 
 async function connect(backend) {
+  if (backend.givenToken) {
+    backend.apiToken = backend.givenToken;
+    return;
+  }
+  if (backend.name === 'camis') throw new Error('camis: set CMS_CAMIS_TOKEN to a full-access API token (Settings > API Tokens in its admin)');
   const init = await json(`${backend.url}/admin/init`).catch((e) => {
     throw new Error(`${backend.name}: ${backend.url} is not reachable (${e.cause?.code ?? e.message}). Is the app running?`);
   });
@@ -136,35 +154,49 @@ function mask(value) {
   return value;
 }
 
-/** Differences between two JSON values, as `path: php … / node …` lines. */
-function diff(a, b, path = 'body') {
+/** Differences between two backends' JSON values, as `path: <one> … / <other> …` lines. */
+function diff(a, b, names, path = 'body') {
   if (Object.is(a, b)) return [];
+  const [na, nb] = names;
   const kind = (v) => (Array.isArray(v) ? 'array' : v === null ? 'null' : typeof v);
   if (kind(a) !== kind(b) || kind(a) !== 'object' && kind(a) !== 'array') {
-    return [`${path}: php ${JSON.stringify(a)} / node ${JSON.stringify(b)}`];
+    return [`${path}: ${na} ${JSON.stringify(a)} / ${nb} ${JSON.stringify(b)}`];
   }
   if (Array.isArray(a)) {
-    if (a.length !== b.length) return [`${path}: php ${a.length} items / node ${b.length} items`];
-    return a.flatMap((v, i) => diff(v, b[i], `${path}[${i}]`));
+    if (a.length !== b.length) return [`${path}: ${na} ${a.length} items / ${nb} ${b.length} items`];
+    return a.flatMap((v, i) => diff(v, b[i], names, `${path}[${i}]`));
   }
   const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
   return keys.flatMap((k) => {
-    if (!(k in a)) return [`${path}.${k}: missing on php (node ${JSON.stringify(b[k])})`];
-    if (!(k in b)) return [`${path}.${k}: missing on node (php ${JSON.stringify(a[k])})`];
-    return diff(a[k], b[k], `${path}.${k}`);
+    if (!(k in a)) return [`${path}.${k}: missing on ${na} (${nb} ${JSON.stringify(b[k])})`];
+    if (!(k in b)) return [`${path}.${k}: missing on ${nb} (${na} ${JSON.stringify(a[k])})`];
+    return diff(a[k], b[k], names, `${path}.${k}`);
   });
+}
+
+/** A request's body: JSON, or with `upload` ({ name, type, base64 }) a multipart `files` upload. */
+function encodeBody(request) {
+  if (request.upload) {
+    const form = new FormData();
+    const { name, type, base64 } = request.upload;
+    form.append('files', new Blob([Buffer.from(base64, 'base64')], { type }), name);
+    return { body: form, headers: {} };
+  }
+  if (request.body === undefined) return { body: undefined, headers: {} };
+  return { body: JSON.stringify(request.body), headers: { 'Content-Type': 'application/json' } };
 }
 
 async function runStep(backend, step, vars) {
   const request = substitute(step.request, vars);
+  const { body: encoded, headers } = encodeBody(request);
   const res = await fetch(backend.url + request.path, {
     method: request.method,
     headers: {
       Accept: 'application/json',
       ...(step.auth === 'none' ? {} : { Authorization: `Bearer ${backend.apiToken}` }),
-      ...(request.body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      ...headers,
     },
-    body: request.body === undefined ? undefined : JSON.stringify(request.body),
+    body: encoded,
   });
   const text = await res.text();
   let body = null;
@@ -190,9 +222,11 @@ async function runFixture(fixture) {
       if ('body' in expect) problems.push(...match(expect.body, result.body).map((p) => `${backend.name} ${label}: ${p}`));
       for (const [name, path] of Object.entries(step.save ?? {})) vars[backend.name][name] = pick(result.body, path);
     }
-    if (results.php && results.node && !step.skipCompare) {
-      if (results.php.status !== results.node.status) problems.push(`differ ${label}: status php ${results.php.status} / node ${results.node.status}`);
-      problems.push(...diff(mask(results.php.body), mask(results.node.body)).map((d) => `differ ${label}: ${d}`));
+    for (const other of step.skipCompare ? [] : backends.filter((b) => b !== reference)) {
+      const [a, b] = [results[other.name], results[reference.name]];
+      const names = [other.name, reference.name];
+      if (a.status !== b.status) problems.push(`differ ${label}: status ${other.name} ${a.status} / ${reference.name} ${b.status}`);
+      problems.push(...diff(mask(a.body), mask(b.body), names).map((d) => `differ ${label}: ${d}`));
     }
   }
   return problems;
@@ -220,5 +254,5 @@ try {
 } finally {
   for (const backend of backends) await disconnect(backend).catch(() => {});
 }
-console.log(failed ? `\n${failed} failing` : `\nall passing on ${backends.map((b) => b.name).join(' and ')}`);
+console.log(failed ? `\n${failed} failing` : `\nall passing on ${backends.map((b) => b.name).join(', ')}`);
 process.exit(failed ? 1 : 0);
