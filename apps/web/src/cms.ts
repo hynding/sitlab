@@ -1,8 +1,8 @@
 /**
- * A small client for the Strapi content API. Both backends (strapi-php and Strapi) speak the same
- * REST dialect, so the same calls work against either.
+ * A small client for the Strapi content API. Every backend (strapi-php, Strapi and CAMIS) speaks
+ * the same REST dialect, so the same calls work against any of them.
  */
-export type Backend = 'php' | 'node'
+export type Backend = 'php' | 'node' | 'camis'
 
 export const backends: Record<Backend, { label: string; url: string; token: string }> = {
   php: {
@@ -15,9 +15,14 @@ export const backends: Record<Backend, { label: string; url: string; token: stri
     url: import.meta.env.VITE_CMS_NODE_URL ?? 'http://localhost:1338',
     token: import.meta.env.VITE_CMS_NODE_TOKEN ?? '',
   },
+  camis: {
+    label: 'CAMIS',
+    url: import.meta.env.VITE_CMS_CAMIS_URL ?? 'http://localhost:1339',
+    token: import.meta.env.VITE_CMS_CAMIS_TOKEN ?? '',
+  },
 }
 
-export const defaultBackend: Backend = import.meta.env.VITE_CMS_DEFAULT === 'node' ? 'node' : 'php'
+export const defaultBackend: Backend = import.meta.env.VITE_CMS_DEFAULT ?? 'php'
 
 export type Story = {
   documentId: string

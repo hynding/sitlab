@@ -1,0 +1,85 @@
+{
+  "defaultRole": "authenticated",
+  "roles": [
+    {
+      "name": "public",
+      "description": "Default role given to unauthenticated users.",
+      "grants": []
+    },
+    {
+      "name": "authenticated",
+      "description": "Default role given to authenticated users.",
+      "grants": []
+    },
+    {
+      "name": "super-admin",
+      "description": "Signs in to the admin and may do everything, as Strapi's Super Admin.",
+      "admin": true,
+      "grants": [
+        {
+          "contentType": "Story",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "Source",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "Scene",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "PlotLine",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "CharacterArc",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "Character",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "File",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        }
+      ]
+    }
+  ]
+}
