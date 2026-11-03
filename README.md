@@ -61,6 +61,9 @@ Both CMS apps use SQLite (`apps/*/.tmp/data.db`) for now. The deployed app will 
 `DATABASE_CLIENT=mysql` and the `DATABASE_*` connection variables; the Node app also needs the
 `mysql2` package then.
 
+`dev` and `main` deploy cms-php and the PWA to DreamHost through GitHub Actions; see
+[docs/deploying.md](docs/deploying.md).
+
 ## The CAMIS backend
 
 `apps/cms-camis` is the content model as a [CAMIS](https://github.com/hynding/camis) project, made
@@ -115,12 +118,13 @@ takes a token instead (`CMS_CAMIS_TOKEN`); any backend can (`CMS_PHP_TOKEN`, `CM
 
 ### Known differences
 
-- **Enumeration error message** (`validation.json`, step 2): for an invalid enum value strapi-php
-  lists the allowed values ending in `null`, Strapi ends them with an empty string
-  (`…, comic, other, ` vs `…, comic, other, null`). CAMIS records its behaviour from strapi-php, so
-  it ends them with `null` too.
-- **Plugins enabled by default**: `hynding/strapi-php` is one package, so the PHP app also has GraphQL
-  (`/graphql`), documentation and sentry, which a vanilla Node app does not.
+- **Enumeration error message on CAMIS** (`validation.json`, step 2): for an invalid enum value CAMIS
+  lists the allowed values ending in `null` (`…, comic, other, null`), where Strapi and strapi-php
+  end them with an empty string (`…, comic, other, `). CAMIS recorded this from an older strapi-php
+  that had the same bug (fixed in hynding/strapi-php#17); the fix belongs in hynding/camis.
+- **Plugins enabled by default**: `hynding/strapi-php` is one package, so it also enables GraphQL,
+  documentation and sentry, which a vanilla Node app does not have. `apps/cms-php/config/plugins.php`
+  turns them off.
 
 ## Versions
 

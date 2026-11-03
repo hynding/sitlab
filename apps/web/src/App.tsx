@@ -1,101 +1,81 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { backends, CmsError, createStory, defaultBackend, listStories, type Backend, type Story } from './cms'
+import { useEffect, useState } from 'react'
+import { backends, canSwitchBackend, defaultBackend, signOut, type Backend } from './cms'
+import { Auth } from './pages/Auth'
+import { Home } from './pages/Home'
+import { Stories } from './pages/Stories'
+import { currentRoute, go, type Route } from './router'
+import { useSession } from './session'
 
 function App() {
+  const [route, setRoute] = useState<Route>(currentRoute)
   const [backend, setBackend] = useState<Backend>(defaultBackend)
-  const [version, setVersion] = useState(0)
-  const [result, setResult] = useState<{ key: string; stories: Story[]; error: string | null }>({ key: '', stories: [], error: null })
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [logline, setLogline] = useState('')
-
-  const key = `${backend}:${version}`
-  const loading = result.key !== key
-  const { stories } = result
-  const error = createError ?? result.error
+  const session = useSession()
 
   useEffect(() => {
-    let current = true
-    listStories(backend).then(
-      (res) => current && setResult({ key, stories: res.data, error: null }),
-      (e) => current && setResult({ key, stories: [], error: describe(e, backend) }),
-    )
-    return () => {
-      current = false
+    const onHashChange = () => {
+      setRoute(currentRoute())
+      window.scrollTo(0, 0)
     }
-  }, [backend, key])
-
-  async function onCreate(event: FormEvent) {
-    event.preventDefault()
-    if (!title.trim()) return
-    try {
-      await createStory(backend, { title: title.trim(), logline: logline.trim() || null })
-      setTitle('')
-      setLogline('')
-      setCreateError(null)
-      setVersion((v) => v + 1)
-    } catch (e) {
-      setCreateError(describe(e, backend))
-    }
-  }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
   return (
-    <main>
-      <header>
-        <h1>Sitlab</h1>
-        <label>
-          Backend{' '}
-          <select
-            value={backend}
-            onChange={(e) => {
-              setCreateError(null)
-              setBackend(e.target.value as Backend)
-            }}
-          >
-            {(Object.keys(backends) as Backend[]).map((b) => (
-              <option key={b} value={b}>
-                {backends[b].label}
-              </option>
-            ))}
-          </select>
-        </label>
+    <>
+      <header className="site-header">
+        <a className="brand" href="#/">
+          Sitlab
+        </a>
+        <nav>
+          <a href="#/stories" aria-current={route === 'stories' ? 'page' : undefined}>
+            Stories
+          </a>
+          {session ? (
+            <>
+              <span className="muted">{session.user.username}</span>
+              <button
+                type="button"
+                className="link"
+                onClick={() => {
+                  void signOut(backend)
+                  go('home')
+                }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <a href="#/signin" aria-current={route === 'signin' ? 'page' : undefined}>
+                Sign in
+              </a>
+              <a className="button" href="#/signup">
+                Sign up
+              </a>
+            </>
+          )}
+          {canSwitchBackend && (
+            <label className="backend">
+              Backend{' '}
+              <select value={backend} onChange={(e) => setBackend(e.target.value as Backend)}>
+                {(Object.keys(backends) as Backend[]).map((b) => (
+                  <option key={b} value={b}>
+                    {backends[b].label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </nav>
       </header>
 
-      <form onSubmit={onCreate}>
-        <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-        <input placeholder="Logline" value={logline} onChange={(e) => setLogline(e.target.value)} />
-        <button type="submit">Add story</button>
-      </form>
-
-      {error && <p role="alert">{error}</p>}
-      {loading ? (
-        <p>Loading…</p>
-      ) : stories.length === 0 && !error ? (
-        <p>No stories yet.</p>
-      ) : (
-        <ul className="stories">
-          {stories.map((story) => (
-            <li key={story.documentId}>
-              <strong>{story.title}</strong>
-              <span className="meta">
-                {story.format} · {story.status}
-                {story.genre ? ` · ${story.genre}` : ''}
-              </span>
-              {story.logline && <p>{story.logline}</p>}
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+      <main>
+        {route === 'home' && <Home signedIn={session !== null} />}
+        {route === 'stories' && <Stories backend={backend} signedIn={session !== null} />}
+        {(route === 'signin' || route === 'signup') && <Auth key={route} mode={route} backend={backend} />}
+      </main>
+    </>
   )
-}
-
-function describe(e: unknown, backend: Backend): string {
-  if (e instanceof CmsError && (e.status === 401 || e.status === 403)) {
-    return `${backends[backend].label} refused the request (${e.status}). Set VITE_CMS_${backend.toUpperCase()}_TOKEN in apps/web/.env.local to an API token from its admin panel.`
-  }
-  if (e instanceof CmsError) return `${backends[backend].label}: ${e.message}`
-  return `${backends[backend].label} is not reachable at ${backends[backend].url}. Is it running?`
 }
 
 export default App

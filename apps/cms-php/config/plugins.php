@@ -28,6 +28,11 @@ $deniedTypes = [
 ];
 
 return static fn (EnvHelper $env): array => [
+    // hynding/strapi-php bundles these and enables them by default; the Node app doesn't have them, and
+    // under FastCGI their bootstrap runs on every request (GraphQL alone ~180 ms)
+    'graphql' => ['enabled' => false],
+    'documentation' => ['enabled' => false],
+    'sentry' => ['enabled' => false],
     'users-permissions' => [
         'config' => [
             'jwtManagement' => 'refresh',
