@@ -1,0 +1,479 @@
+{
+  "version": 1,
+  "contentTypes": [
+    {
+      "name": "Story",
+      "kind": "collection",
+      "names": {
+        "display": "Story",
+        "plural": "Stories",
+        "collection": "stories"
+      },
+      "fields": [
+        {
+          "type": "string",
+          "name": "title",
+          "required": true
+        },
+        {
+          "type": "uid",
+          "name": "slug",
+          "targetField": "title"
+        },
+        {
+          "type": "text",
+          "name": "logline",
+          "maxLength": 300
+        },
+        {
+          "type": "blocks",
+          "name": "synopsis"
+        },
+        {
+          "type": "enumeration",
+          "name": "format",
+          "values": [
+            "feature",
+            "short",
+            "series",
+            "episode",
+            "novel",
+            "short-story",
+            "comic",
+            "other"
+          ],
+          "default": "feature"
+        },
+        {
+          "type": "string",
+          "name": "genre"
+        },
+        {
+          "type": "enumeration",
+          "name": "status",
+          "values": [
+            "idea",
+            "outline",
+            "draft",
+            "revision",
+            "done"
+          ],
+          "default": "idea"
+        },
+        {
+          "type": "relation",
+          "name": "characters",
+          "relationKind": "manyToMany",
+          "target": "Character",
+          "inverse": "stories"
+        },
+        {
+          "type": "relation",
+          "name": "sources",
+          "relationKind": "manyToMany",
+          "target": "Source",
+          "inverse": "stories"
+        }
+      ],
+      "options": {
+        "draftPublish": false,
+        "timestamps": true,
+        "softDelete": false
+      }
+    },
+    {
+      "name": "Source",
+      "kind": "collection",
+      "names": {
+        "display": "Source",
+        "plural": "Sources",
+        "collection": "sources"
+      },
+      "fields": [
+        {
+          "type": "string",
+          "name": "title",
+          "required": true
+        },
+        {
+          "type": "string",
+          "name": "url",
+          "pattern": "^https?://"
+        },
+        {
+          "type": "enumeration",
+          "name": "kind",
+          "values": [
+            "article",
+            "book",
+            "dataset",
+            "image",
+            "video",
+            "audio",
+            "archive",
+            "other"
+          ],
+          "default": "article"
+        },
+        {
+          "type": "string",
+          "name": "publisher"
+        },
+        {
+          "type": "string",
+          "name": "license"
+        },
+        {
+          "type": "date",
+          "name": "accessedOn"
+        },
+        {
+          "type": "text",
+          "name": "notes"
+        }
+      ],
+      "options": {
+        "draftPublish": false,
+        "timestamps": true,
+        "softDelete": false
+      }
+    },
+    {
+      "name": "Scene",
+      "kind": "collection",
+      "names": {
+        "display": "Scene",
+        "plural": "Scenes",
+        "collection": "scenes"
+      },
+      "fields": [
+        {
+          "type": "string",
+          "name": "title",
+          "required": true
+        },
+        {
+          "type": "integer",
+          "name": "position",
+          "min": 0
+        },
+        {
+          "type": "string",
+          "name": "location"
+        },
+        {
+          "type": "enumeration",
+          "name": "timeOfDay",
+          "values": [
+            "day",
+            "night",
+            "dawn",
+            "dusk",
+            "continuous"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "summary"
+        },
+        {
+          "type": "text",
+          "name": "screenplay"
+        },
+        {
+          "type": "relation",
+          "name": "story",
+          "relationKind": "manyToOne",
+          "target": "Story",
+          "inverse": "scenes"
+        },
+        {
+          "type": "relation",
+          "name": "plotLines",
+          "relationKind": "manyToMany",
+          "target": "PlotLine",
+          "inverse": "scenes"
+        },
+        {
+          "type": "relation",
+          "name": "characters",
+          "relationKind": "manyToMany",
+          "target": "Character",
+          "inverse": "scenes"
+        },
+        {
+          "type": "component",
+          "name": "storyboard",
+          "component": "StoryboardFrame",
+          "repeatable": true
+        }
+      ],
+      "options": {
+        "draftPublish": false,
+        "timestamps": true,
+        "softDelete": false
+      }
+    },
+    {
+      "name": "PlotLine",
+      "kind": "collection",
+      "names": {
+        "display": "Plot line",
+        "plural": "PlotLines",
+        "collection": "plot_lines"
+      },
+      "fields": [
+        {
+          "type": "string",
+          "name": "title",
+          "required": true
+        },
+        {
+          "type": "enumeration",
+          "name": "kind",
+          "values": [
+            "a-plot",
+            "b-plot",
+            "c-plot",
+            "subplot",
+            "runner"
+          ],
+          "default": "a-plot"
+        },
+        {
+          "type": "text",
+          "name": "summary"
+        },
+        {
+          "type": "relation",
+          "name": "story",
+          "relationKind": "manyToOne",
+          "target": "Story",
+          "inverse": "plotLines"
+        },
+        {
+          "type": "component",
+          "name": "beats",
+          "component": "Beat",
+          "repeatable": true
+        }
+      ],
+      "options": {
+        "draftPublish": false,
+        "timestamps": true,
+        "softDelete": false
+      }
+    },
+    {
+      "name": "CharacterArc",
+      "kind": "collection",
+      "names": {
+        "display": "Character arc",
+        "plural": "CharacterArcs",
+        "collection": "character_arcs"
+      },
+      "fields": [
+        {
+          "type": "string",
+          "name": "title",
+          "required": true
+        },
+        {
+          "type": "relation",
+          "name": "character",
+          "relationKind": "manyToOne",
+          "target": "Character",
+          "inverse": "arcs"
+        },
+        {
+          "type": "relation",
+          "name": "story",
+          "relationKind": "manyToOne",
+          "target": "Story"
+        },
+        {
+          "type": "text",
+          "name": "startState"
+        },
+        {
+          "type": "text",
+          "name": "endState"
+        },
+        {
+          "type": "component",
+          "name": "beats",
+          "component": "Beat",
+          "repeatable": true
+        }
+      ],
+      "options": {
+        "draftPublish": false,
+        "timestamps": true,
+        "softDelete": false
+      }
+    },
+    {
+      "name": "Character",
+      "kind": "collection",
+      "names": {
+        "display": "Character",
+        "plural": "Characters",
+        "collection": "characters"
+      },
+      "fields": [
+        {
+          "type": "string",
+          "name": "name",
+          "required": true
+        },
+        {
+          "type": "uid",
+          "name": "slug",
+          "targetField": "name"
+        },
+        {
+          "type": "enumeration",
+          "name": "role",
+          "values": [
+            "protagonist",
+            "antagonist",
+            "deuteragonist",
+            "supporting",
+            "minor"
+          ],
+          "default": "supporting"
+        },
+        {
+          "type": "text",
+          "name": "summary"
+        },
+        {
+          "type": "blocks",
+          "name": "backstory"
+        },
+        {
+          "type": "media",
+          "name": "portrait",
+          "required": false,
+          "multiple": false,
+          "allowedTypes": [
+            "image"
+          ]
+        },
+        {
+          "type": "component",
+          "name": "traits",
+          "component": "Trait",
+          "repeatable": true
+        }
+      ],
+      "options": {
+        "draftPublish": false,
+        "timestamps": true,
+        "softDelete": false
+      }
+    },
+    {
+      "name": "File",
+      "kind": "collection",
+      "builtin": "file",
+      "fields": [],
+      "names": {
+        "display": "File",
+        "plural": "Files",
+        "collection": "files"
+      },
+      "options": {
+        "draftPublish": false,
+        "timestamps": true,
+        "softDelete": false
+      }
+    }
+  ],
+  "components": [
+    {
+      "name": "Beat",
+      "names": {
+        "collection": "components_story_beats",
+        "group": "story"
+      },
+      "fields": [
+        {
+          "type": "string",
+          "name": "title",
+          "required": true
+        },
+        {
+          "type": "text",
+          "name": "description"
+        },
+        {
+          "type": "enumeration",
+          "name": "mood",
+          "values": [
+            "humor",
+            "drama",
+            "tension",
+            "release",
+            "romance",
+            "neutral"
+          ],
+          "default": "neutral"
+        }
+      ]
+    },
+    {
+      "name": "StoryboardFrame",
+      "names": {
+        "collection": "components_story_storyboard_frames",
+        "group": "story"
+      },
+      "fields": [
+        {
+          "type": "media",
+          "name": "image",
+          "required": false,
+          "multiple": false,
+          "allowedTypes": [
+            "image"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "caption"
+        },
+        {
+          "type": "enumeration",
+          "name": "shot",
+          "values": [
+            "wide",
+            "medium",
+            "close-up",
+            "extreme-close-up",
+            "over-the-shoulder",
+            "pov",
+            "insert"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Trait",
+      "names": {
+        "collection": "components_story_traits",
+        "group": "story"
+      },
+      "fields": [
+        {
+          "type": "string",
+          "name": "label",
+          "required": true
+        },
+        {
+          "type": "text",
+          "name": "value"
+        }
+      ]
+    }
+  ]
+}

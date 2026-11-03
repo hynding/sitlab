@@ -6,6 +6,7 @@
     "setup": "node scripts/init-env.mjs && composer --working-dir=apps/cms-php install && npm --prefix apps/cms-php install && npm --prefix apps/cms-node install && npm --prefix apps/web install",
     "dev:php": "cd apps/cms-php && php bin/strapi develop",
     "dev:node": "npm --prefix apps/cms-node run develop",
+    "dev:camis": "cd apps/cms-camis/generated/filament && php artisan serve --port=1339",
     "dev:web": "npm --prefix apps/web run dev",
     "schema:sync": "node scripts/sync-schema.mjs",
     "schema:check": "node scripts/sync-schema.mjs --check",
