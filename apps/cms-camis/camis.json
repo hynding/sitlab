@@ -388,6 +388,34 @@
         "timestamps": true,
         "softDelete": false
       }
+    },
+    {
+      "name": "User",
+      "kind": "collection",
+      "builtin": "user",
+      "fields": [
+        {
+          "type": "string",
+          "name": "username",
+          "required": true,
+          "unique": true
+        },
+        {
+          "type": "email",
+          "name": "email",
+          "required": true
+        }
+      ],
+      "names": {
+        "display": "User",
+        "plural": "Users",
+        "collection": "users"
+      },
+      "options": {
+        "draftPublish": false,
+        "timestamps": true,
+        "softDelete": false
+      }
     }
   ],
   "components": [
