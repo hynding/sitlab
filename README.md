@@ -74,6 +74,7 @@ cd apps/cms-camis
 camis scaffold filament generated/filament   # the Laravel host app (once)
 camis build                                  # generates the overlay into generated/filament
 cd generated/filament
+cat ../../deployment.env >> .env              # upload type lists, page sizes, sessions (once)
 php artisan migrate && php artisan db:seed --class=RolePermissionSeeder
 php artisan camis:admin admin@sitlab.local   # an admin who may sign in at /admin
 cd ../../../.. && npm run dev:camis          # http://localhost:1339/admin
@@ -83,9 +84,16 @@ cd ../../../.. && npm run dev:camis          # http://localhost:1339/admin
 closed, as in the other two) and a `super-admin` role, the one that signs in to the admin. For the
 PWA or the conformance suite, create a full-access API token in the admin (Settings > API Tokens).
 
+`deployment.env` is cms-php's `config/plugins.php` and `config/api.php` as Laravel settings: the
+upload allow and deny lists (an SVG is refused, as in strapi-php), the REST page sizes and the
+refresh-token sessions. CORS follows Strapi's defaults (any origin, with credentials, which the PWA
+needs); set `CAMIS_CORS_ORIGIN` to a comma-separated list to narrow it.
+
 `camis.json` is imported from `apps/cms-php`, so it follows `schema/` only when re-imported: after a
-model change, run `camis new` again into a scratch directory and copy its `camis.json` and
-`roles.json` here, then `camis build`.
+model or config change, run `camis new` again into a scratch directory and copy its `camis.json`
+and `roles.json` here, write `deployment.env` with
+`camis import strapi apps/cms-php --out /tmp/ir.json --env-out apps/cms-camis/deployment.env`, then
+`camis build`.
 
 ## Changing the content model
 
@@ -115,10 +123,6 @@ takes a token instead (`CMS_CAMIS_TOKEN`); any backend can (`CMS_PHP_TOKEN`, `CM
 
 ### Known differences
 
-- **Enumeration error message** (`validation.json`, step 2): for an invalid enum value strapi-php
-  lists the allowed values ending in `null`, Strapi ends them with an empty string
-  (`…, comic, other, ` vs `…, comic, other, null`). CAMIS records its behaviour from strapi-php, so
-  it ends them with `null` too.
 - **Plugins enabled by default**: `hynding/strapi-php` is one package, so the PHP app also has GraphQL
   (`/graphql`), documentation and sentry, which a vanilla Node app does not.
 
