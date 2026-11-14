@@ -33,8 +33,8 @@ export type Story = {
   documentId: string
   title: string
   logline: string | null
-  format: string
-  status: string
+  format: (typeof storyFormats)[number]
+  status: (typeof storyStatuses)[number]
   genre: string | null
 }
 
@@ -116,6 +116,96 @@ export const listStories = (backend: Backend) =>
 
 export const createStory = (backend: Backend, data: Pick<Story, 'title'> & Partial<Story>) =>
   request<{ data: Story }>(backend, '/stories', { method: 'POST', body: JSON.stringify({ data }) })
+
+// --- the Story workspace -------------------------------------------------------------------------
+// Enumeration values, as in schema/.
+
+export const storyFormats = ['feature', 'short', 'series', 'episode', 'novel', 'short-story', 'comic', 'other'] as const
+export const storyStatuses = ['idea', 'outline', 'draft', 'revision', 'done'] as const
+export const characterRoles = ['protagonist', 'antagonist', 'deuteragonist', 'supporting', 'minor'] as const
+export const plotLineKinds = ['a-plot', 'b-plot', 'c-plot', 'subplot', 'runner'] as const
+export const beatMoods = ['humor', 'drama', 'tension', 'release', 'romance', 'neutral'] as const
+export const timesOfDay = ['day', 'night', 'dawn', 'dusk', 'continuous'] as const
+
+/** A repeatable component entry. `id` is absent on one that has not been saved yet. */
+export type Beat = { id?: number; title: string; description: string | null; mood: (typeof beatMoods)[number] }
+export type Trait = { id?: number; label: string; value: string | null }
+
+export type Character = {
+  documentId: string
+  name: string
+  role: (typeof characterRoles)[number]
+  summary: string | null
+  traits: Trait[]
+}
+
+export type PlotLine = {
+  documentId: string
+  title: string
+  kind: (typeof plotLineKinds)[number]
+  summary: string | null
+  beats: Beat[]
+}
+
+export type Scene = {
+  documentId: string
+  title: string
+  position: number | null
+  location: string | null
+  timeOfDay: (typeof timesOfDay)[number] | null
+  summary: string | null
+  screenplay: string | null
+  characters: Pick<Character, 'documentId' | 'name'>[]
+  plotLines: Pick<PlotLine, 'documentId' | 'title'>[]
+}
+
+export type StoryDetail = Story & {
+  characters: Character[]
+  plotLines: PlotLine[]
+  scenes: Scene[]
+}
+
+/** Builds a Strapi query string; brackets stay readable, values are encoded. */
+function query(params: [string, string | number][]): string {
+  return '?' + params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&')
+}
+
+const storyPopulate = query([
+  ['populate[characters][populate][traits]', 'true'],
+  ['populate[characters][sort][0]', 'name:asc'],
+  ['populate[plotLines][populate][beats]', 'true'],
+  ['populate[plotLines][sort][0]', 'kind:asc'],
+  ['populate[scenes][populate][characters][fields][0]', 'name'],
+  ['populate[scenes][populate][plotLines][fields][0]', 'title'],
+  ['populate[scenes][sort][0]', 'position:asc'],
+])
+
+export const getStory = (backend: Backend, documentId: string) =>
+  request<{ data: StoryDetail }>(backend, `/stories/${encodeURIComponent(documentId)}${storyPopulate}`)
+
+/** The collections the workspace writes, by their REST plural. */
+type Collection = 'stories' | 'characters' | 'plot-lines' | 'scenes'
+
+export const createEntry = <T,>(backend: Backend, collection: Collection, data: object) =>
+  request<{ data: T }>(backend, `/${collection}`, { method: 'POST', body: JSON.stringify({ data }) })
+
+export const updateEntry = <T,>(backend: Backend, collection: Collection, documentId: string, data: object) =>
+  request<{ data: T }>(backend, `/${collection}/${encodeURIComponent(documentId)}`, { method: 'PUT', body: JSON.stringify({ data }) })
+
+export const deleteEntry = (backend: Backend, collection: Collection, documentId: string) =>
+  request<void>(backend, `/${collection}/${encodeURIComponent(documentId)}`, { method: 'DELETE' })
+
+/** Characters for the "add an existing character" picker. */
+export const listCharacters = (backend: Backend) =>
+  request<ListResponse<Pick<Character, 'documentId' | 'name'>>>(
+    backend,
+    '/characters' +
+      query([
+        ['fields[0]', 'name'],
+        ['sort[0]', 'name:asc'],
+        ['pagination[pageSize]', 100],
+      ]),
+  )
 
 type AuthResponse = { jwt: string; user: User }
 

@@ -57,6 +57,12 @@ Create an admin in each CMS on first visit. The content API is closed by default
 an API token in each admin (Settings > API Tokens) and put it in `apps/web/.env.local`
 (see `apps/web/.env.example`).
 
+To edit in the PWA, sign up from it and, in each admin, give the Authenticated role (Settings >
+Users & Permissions > Roles) `find`, `findOne`, `create`, `update` and `delete` on Story, Character,
+Plot-line and Scene. A story's page (`#/stories/<documentId>`) is its workspace: details, characters
+with traits, plot lines with beats tagged by mood, and scenes in order with their cast, plot lines and
+screenplay. `conformance/fixtures/workspace.json` replays the requests it makes.
+
 Both CMS apps use SQLite (`apps/*/.tmp/data.db`) for now. The deployed app will use MySQL: set
 `DATABASE_CLIENT=mysql` and the `DATABASE_*` connection variables; the Node app also needs the
 `mysql2` package then.

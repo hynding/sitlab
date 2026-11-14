@@ -234,3 +234,266 @@ form.stacked label {
 .stories p {
   margin: 0.25rem 0 0;
 }
+
+/* Story workspace */
+
+textarea {
+  font: inherit;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+
+legend {
+  color: var(--muted);
+  font-size: 0.875rem;
+  padding: 0 0.25rem;
+}
+
+button.secondary {
+  background: none;
+  color: var(--accent);
+}
+
+button.danger {
+  background: none;
+  border-color: #c2410c;
+  color: #c2410c;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.row label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.row .grow {
+  flex: 1 1 14rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.card p {
+  margin: 0.25rem 0;
+}
+
+.card .row {
+  margin-top: 0.5rem;
+}
+
+form.card {
+  margin: 0;
+}
+
+.cards {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.story-head {
+  margin-bottom: 1.5rem;
+}
+
+.story-head h1 {
+  margin-bottom: 0.25rem;
+}
+
+.story-head .meta,
+.slug {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.story-head .lead {
+  margin: 0.5rem 0 1rem;
+}
+
+.ws-section {
+  border-top: 1px solid var(--border);
+  padding: 1rem 0;
+}
+
+.ws-section h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.tag {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 0 0.6rem;
+}
+
+.tag.person {
+  border-style: dashed;
+}
+
+.role-protagonist {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.traits {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
+.traits div {
+  display: contents;
+}
+
+.traits dt {
+  color: var(--muted);
+}
+
+.traits dd {
+  margin: 0;
+}
+
+.beats {
+  margin: 0.5rem 0 0;
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.beat-edit {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--border);
+}
+
+.mood {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mood-humor {
+  color: #b45309;
+}
+
+.mood-drama {
+  color: #7c3aed;
+}
+
+.mood-tension {
+  color: #c2410c;
+}
+
+.mood-release {
+  color: #15803d;
+}
+
+.mood-romance {
+  color: #be185d;
+}
+
+.mood-neutral {
+  color: var(--muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .mood-humor {
+    color: #fbbf24;
+  }
+
+  .mood-drama {
+    color: #c4b5fd;
+  }
+
+  .mood-tension {
+    color: #fb923c;
+  }
+
+  .mood-release {
+    color: #4ade80;
+  }
+
+  .mood-romance {
+    color: #f472b6;
+  }
+}
+
+.checks {
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+}
+
+.checks label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.checks input {
+  flex: none;
+}
+
+.screenplay {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  white-space: pre-wrap;
+}
+
+pre.screenplay {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
+.stories a.title {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.change-error {
+  background: var(--surface);
+  border: 1px solid #c2410c;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
