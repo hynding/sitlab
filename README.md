@@ -77,18 +77,49 @@ cd apps/cms-camis
 camis scaffold filament generated/filament   # the Laravel host app (once)
 camis build                                  # generates the overlay into generated/filament
 cd generated/filament
+cat ../../deployment.env >> .env              # upload type lists, page sizes, sessions (once)
 php artisan migrate && php artisan db:seed --class=RolePermissionSeeder
-php artisan camis:admin admin@sitlab.local   # an admin who may sign in at /admin
+php artisan camis:admin admin@sitlab.local   # an admin who may sign in at /admin (optional:
+                                             # the conformance runner registers one on a fresh database)
 cd ../../../.. && npm run dev:camis          # http://localhost:1339/admin
 ```
 
 `roles.json` gives Strapi's `public` and `authenticated` roles (no grants, so the content API is
-closed, as in the other two) and a `super-admin` role, the one that signs in to the admin. For the
-PWA or the conformance suite, create a full-access API token in the admin (Settings > API Tokens).
+closed, as in the other two) and a `super-admin` role, the one that signs in to the admin. Admins
+are their own accounts, as in Strapi: they never appear in `/api/users`. CAMIS serves Strapi's admin
+API for them (`/admin/login`, `/admin/api-tokens`, …), so the conformance runner signs in to it like
+the other two apps. For the PWA, create a full-access API token in the admin
+(Settings > API Tokens, `/admin/settings/api-tokens`).
+
+**Upgrading an app scaffolded before separate admin accounts** (camis before hynding/camis#53):
+`camis build` (it replaces `config/auth.php`), add `->authGuard('admin')` after `->login()` in
+`generated/filament/app/Providers/Filament/AdminPanelProvider.php`, `php artisan migrate`, run
+`php artisan camis:admin <email>` again for each admin, then delete their old rows from `users`,
+where the API still lists them. `php artisan strapi:import-admins --database=../../../cms-php/.tmp/data.db`
+brings cms-php's admin accounts over instead, with their passwords.
+
+`deployment.env` is cms-php's `config/plugins.php`, `config/api.php` and `config/middlewares.php` as Laravel settings: the
+upload allow and deny lists (an SVG is refused, as in strapi-php), the REST page sizes and the
+refresh-token sessions. CORS follows Strapi's defaults (any origin, with credentials, which the PWA
+needs); set `CAMIS_CORS_ORIGIN` to a comma-separated list to narrow it.
 
 `camis.json` is imported from `apps/cms-php`, so it follows `schema/` only when re-imported: after a
-model change, run `camis new` again into a scratch directory and copy its `camis.json` and
-`roles.json` here, then `camis build`.
+model or config change, run `camis new` again into a scratch directory and copy its `camis.json`
+and `roles.json` here, write `deployment.env` with
+`camis import strapi apps/cms-php --out /tmp/ir.json --env-out apps/cms-camis/deployment.env`, then
+`camis build`.
+
+Checked end to end on 2026-11-14 (hynding/camis#66): all fixtures pass on strapi-php and CAMIS, and
+an export from cms-php imported with `php artisan strapi:import` answers the content API the same,
+timestamps to the millisecond. What still differs from strapi-php:
+
+- After `POST /api/auth/logout`, CAMIS refuses that session's access token at once; strapi-php honours
+  it until it expires (the PWA drops it on logout either way).
+- `GET /api/i18n/locales` is a 404, as no sitlab type is localized; strapi-php lists `en`.
+- With Draft & Publish off, `publishedAt` repeats `createdAt`; strapi-php stores its own, a
+  millisecond or two apart.
+- An app built before camis#66 keeps second-precision timestamp columns on MySQL/Postgres until they
+  are rebuilt (`php artisan migrate:fresh` plus an import, or recreate the tables).
 
 ## Changing the content model
 
@@ -106,22 +137,18 @@ With both CMS apps running:
 npm run conformance                    # every fixture, both backends
 node conformance/run.mjs --only php    # one backend
 node conformance/run.mjs validation    # fixtures whose name contains "validation"
-CMS_CAMIS_TOKEN=<token> node conformance/run.mjs --only php,camis   # strapi-php and CAMIS
+node conformance/run.mjs --only php,camis   # strapi-php and CAMIS
 ```
 
 The runner signs in to each admin (registering `admin@sitlab.local` on a fresh database; override
 with `CONFORMANCE_ADMIN_EMAIL` / `CONFORMANCE_ADMIN_PASSWORD`), creates a temporary API token, runs
 `conformance/fixtures/*.json`, and deletes the token. Each step is checked against its `expect`, and
 the backends' responses are diffed against the reference (Strapi on Node when it runs, otherwise the
-first one listed) with ids and timestamps masked. CAMIS has no Strapi admin API to sign in to, so it
-takes a token instead (`CMS_CAMIS_TOKEN`); any backend can (`CMS_PHP_TOKEN`, `CMS_NODE_TOKEN`).
+first one listed) with ids and timestamps masked. A backend can take a token instead of signing in
+(`CMS_PHP_TOKEN`, `CMS_NODE_TOKEN`, `CMS_CAMIS_TOKEN`).
 
 ### Known differences
 
-- **Enumeration error message on CAMIS** (`validation.json`, step 2): for an invalid enum value CAMIS
-  lists the allowed values ending in `null` (`…, comic, other, null`), where Strapi and strapi-php
-  end them with an empty string (`…, comic, other, `). CAMIS recorded this from an older strapi-php
-  that had the same bug (fixed in hynding/strapi-php#17); the fix belongs in hynding/camis.
 - **Plugins enabled by default**: `hynding/strapi-php` is one package, so it also enables GraphQL,
   documentation and sentry, which a vanilla Node app does not have. `apps/cms-php/config/plugins.php`
   turns them off.

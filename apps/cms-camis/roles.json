@@ -3,12 +3,12 @@
   "roles": [
     {
       "name": "public",
-      "description": "Default role given to unauthenticated users.",
+      "description": "Default role given to unauthenticated user.",
       "grants": []
     },
     {
       "name": "authenticated",
-      "description": "Default role given to authenticated users.",
+      "description": "Default role given to authenticated user.",
       "grants": []
     },
     {
@@ -72,6 +72,15 @@
         },
         {
           "contentType": "File",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "User",
           "actions": [
             "create",
             "read",

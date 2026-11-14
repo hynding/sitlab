@@ -13,10 +13,9 @@
  *   CMS_CAMIS_URL  default http://localhost:1339   (apps/cms-camis, CAMIS)
  *   CMS_<NAME>_TOKEN
  *                 a full-access API token for that backend, used instead of signing in to its
- *                 admin. CAMIS needs one (its admin is Filament, not Strapi's admin API): create it
- *                 under Settings > API Tokens.
+ *                 admin.
  *   CONFORMANCE_ADMIN_EMAIL / CONFORMANCE_ADMIN_PASSWORD
- *                 an admin of the Strapi apps. On a fresh database the first run registers it.
+ *                 an admin of each app. On a fresh database the first run registers it.
  *
  * Each fixture is a list of steps: `request` (method, path, and a JSON `body` or a file `upload`),
  * `expect` (status, body) and optional `save` ({ name: "data.documentId" }) to reuse a value later
@@ -76,7 +75,6 @@ async function connect(backend) {
     backend.apiToken = backend.givenToken;
     return;
   }
-  if (backend.name === 'camis') throw new Error('camis: set CMS_CAMIS_TOKEN to a full-access API token (Settings > API Tokens in its admin)');
   const init = await json(`${backend.url}/admin/init`).catch((e) => {
     throw new Error(`${backend.name}: ${backend.url} is not reachable (${e.cause?.code ?? e.message}). Is the app running?`);
   });
