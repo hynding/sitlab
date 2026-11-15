@@ -1,0 +1,566 @@
+{
+  "description": "What the Story workspace sends: links from both sides, component edits by id, scene order and set",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Lighthouse {{run}}",
+            "format": "short"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "story": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Wren {{run}}",
+            "role": "protagonist",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": {
+          "data": {
+            "name": "Wren {{run}}"
+          }
+        }
+      },
+      "save": {
+        "wren": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Abel {{run}}",
+            "role": "antagonist"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "abel": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/stories/{{story}}",
+        "body": {
+          "data": {
+            "characters": {
+              "connect": [
+                "{{abel}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/plot-lines?populate=beats",
+        "body": {
+          "data": {
+            "title": "Keeper's debt {{run}}",
+            "kind": "b-plot",
+            "story": "{{story}}",
+            "beats": [
+              {
+                "title": "Debt collector arrives",
+                "mood": "tension"
+              },
+              {
+                "title": "Wren hides the ledger",
+                "mood": "humor"
+              },
+              {
+                "title": "Lamp goes dark",
+                "mood": "drama"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "debt": "data.documentId",
+        "beat0": "data.beats.0.id",
+        "beat2": "data.beats.2.id"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/plot-lines",
+        "body": {
+          "data": {
+            "title": "The storm {{run}}",
+            "kind": "a-plot",
+            "story": "{{story}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "storm": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/plot-lines/{{debt}}?populate=beats",
+        "body": {
+          "data": {
+            "title": "Keeper's debt {{run}}",
+            "kind": "b-plot",
+            "summary": null,
+            "beats": [
+              {
+                "id": "{{beat2}}",
+                "title": "Lamp goes dark",
+                "description": "Moved first",
+                "mood": "drama"
+              },
+              {
+                "id": "{{beat0}}",
+                "title": "Debt collector arrives",
+                "description": null,
+                "mood": "tension"
+              },
+              {
+                "title": "Abel forgives the debt",
+                "description": null,
+                "mood": "release"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "beats": [
+              {
+                "title": "Lamp goes dark",
+                "description": "Moved first"
+              },
+              {
+                "title": "Debt collector arrives"
+              },
+              {
+                "title": "Abel forgives the debt",
+                "mood": "release"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes",
+        "body": {
+          "data": {
+            "title": "Night watch {{run}}",
+            "position": 0,
+            "story": "{{story}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "watch": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes",
+        "body": {
+          "data": {
+            "title": "Knock at the door {{run}}",
+            "position": 1,
+            "story": "{{story}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "knock": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{knock}}",
+        "body": {
+          "data": {
+            "position": 0
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{watch}}",
+        "body": {
+          "data": {
+            "position": 1
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{knock}}",
+        "body": {
+          "data": {
+            "title": "Knock at the door {{run}}",
+            "location": "INT. Lighthouse",
+            "timeOfDay": "night",
+            "summary": null,
+            "screenplay": "INT. LIGHTHOUSE - NIGHT\n\nA knock. WREN freezes.",
+            "characters": {
+              "set": [
+                "{{wren}}",
+                "{{abel}}"
+              ]
+            },
+            "plotLines": {
+              "set": [
+                "{{debt}}",
+                "{{storm}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "location": "INT. Lighthouse",
+            "timeOfDay": "night"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{knock}}",
+        "body": {
+          "data": {
+            "characters": {
+              "set": [
+                "{{abel}}"
+              ]
+            },
+            "plotLines": {
+              "set": [
+                "{{debt}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}?populate[characters][populate][traits]=true&populate[characters][sort][0]=name:asc&populate[plotLines][populate][beats]=true&populate[plotLines][sort][0]=kind:asc&populate[scenes][populate][characters][fields][0]=name&populate[scenes][populate][plotLines][fields][0]=title&populate[scenes][sort][0]=position:asc"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "title": "Lighthouse {{run}}",
+            "characters": [
+              {
+                "name": "Abel {{run}}",
+                "traits": []
+              },
+              {
+                "name": "Wren {{run}}",
+                "traits": []
+              }
+            ],
+            "plotLines": [
+              {
+                "title": "The storm {{run}}",
+                "beats": []
+              },
+              {
+                "title": "Keeper's debt {{run}}",
+                "beats": [
+                  {
+                    "title": "Lamp goes dark"
+                  },
+                  {
+                    "title": "Debt collector arrives"
+                  },
+                  {
+                    "title": "Abel forgives the debt"
+                  }
+                ]
+              }
+            ],
+            "scenes": [
+              {
+                "title": "Knock at the door {{run}}",
+                "position": 0,
+                "characters": [
+                  {
+                    "$keys": [
+                      "id",
+                      "documentId",
+                      "name"
+                    ],
+                    "name": "Abel {{run}}"
+                  }
+                ],
+                "plotLines": [
+                  {
+                    "$keys": [
+                      "id",
+                      "documentId",
+                      "title"
+                    ],
+                    "title": "Keeper's debt {{run}}"
+                  }
+                ]
+              },
+              {
+                "title": "Night watch {{run}}",
+                "position": 1,
+                "characters": [],
+                "plotLines": []
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/characters/{{wren}}?populate=traits",
+        "body": {
+          "data": {
+            "name": "Wren {{run}}",
+            "role": "protagonist",
+            "summary": "The keeper's daughter",
+            "traits": [
+              {
+                "label": "Fear",
+                "value": "The dark"
+              },
+              {
+                "label": "Want",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "traits": [
+              {
+                "label": "Fear",
+                "value": "The dark"
+              },
+              {
+                "label": "Want",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "save": {
+        "fear": "data.traits.0.id"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/characters/{{wren}}?populate=traits",
+        "body": {
+          "data": {
+            "traits": [
+              {
+                "id": "{{fear}}",
+                "label": "Fear",
+                "value": "The dark, and the sea"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "traits": [
+              {
+                "label": "Fear",
+                "value": "The dark, and the sea"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/characters/{{abel}}",
+        "body": {
+          "data": {
+            "stories": {
+              "disconnect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}?populate[characters][fields][0]=name"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "characters": [
+              {
+                "name": "Wren {{run}}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/scenes/{{knock}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/scenes/{{watch}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/plot-lines/{{debt}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/plot-lines/{{storm}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{wren}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{abel}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    }
+  ]
+}

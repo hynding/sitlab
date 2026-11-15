@@ -103,8 +103,9 @@ rotating `ENCRYPTION_KEY` or `API_TOKEN_SALT` later breaks stored data and token
 3. Set what visitors and signed-in users may do: Settings → Users & Permissions → Roles.
    - **Public**: allow `find` and `findOne` on the types the PWA reads (Story, Character,
      Character-arc, Plot-line, Scene, Source).
-   - **Authenticated**: the same, plus `create` (and `update` / `delete` if users should edit) on
-     the types they write. Story is the only one the PWA writes so far.
+   - **Authenticated**: the same, plus `create`, `update` and `delete` on Story, Character, Plot-line
+     and Scene, which the story workspace writes. There is no ownership yet: any signed-in user can
+     edit any story, so keep sign-ups closed (below) until there is.
 
    Anyone can sign up from the PWA. To close sign-ups, turn off "Enable sign-ups" under
    Settings → Users & Permissions → Advanced settings.
