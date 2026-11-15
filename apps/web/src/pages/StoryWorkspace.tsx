@@ -5,9 +5,10 @@ import { Characters } from '../workspace/Characters'
 import { WorkspaceContext, type Workspace } from '../workspace/context'
 import { Details } from '../workspace/Details'
 import { PlotLines } from '../workspace/PlotLines'
+import { Research } from '../workspace/Research'
 import { Scenes } from '../workspace/Scenes'
 
-/** One story with its characters, plot lines and scenes, editable in place when signed in. */
+/** One story with its characters, plot lines, scenes and research, editable in place when signed in. */
 export function StoryWorkspace({ id, backend, signedIn }: { id: string; backend: Backend; signedIn: boolean }) {
   const [version, setVersion] = useState(0)
   const [loaded, setLoaded] = useState<{ key: string; story: StoryDetail | null; error: string | null }>({
@@ -84,6 +85,7 @@ export function StoryWorkspace({ id, backend, signedIn }: { id: string; backend:
         <Characters />
         <PlotLines />
         <Scenes />
+        <Research />
       </article>
     </WorkspaceContext.Provider>
   )

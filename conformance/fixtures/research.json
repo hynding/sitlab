@@ -1,0 +1,375 @@
+{
+  "description": "What the story research panel sends: sources with Wikidata facts, linked to characters and scenes from the source side",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Orrery {{run}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "story": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Ada {{run}}",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "ada": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes",
+        "body": {
+          "data": {
+            "title": "The engine room {{run}}",
+            "position": 0,
+            "story": "{{story}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "scene": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/sources?populate[characters][fields][0]=name",
+        "body": {
+          "data": {
+            "title": "Ada Lovelace {{run}}",
+            "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+            "topic": "person",
+            "kind": "article",
+            "wikidataId": "Q7259",
+            "excerpt": "English mathematician and writer.",
+            "period": "1815 – 1852",
+            "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/240px-Ada_Lovelace_portrait.jpg",
+            "publisher": "Wikipedia",
+            "license": "CC BY-SA 4.0",
+            "accessedOn": "2026-11-15",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            },
+            "characters": {
+              "connect": [
+                "{{ada}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": {
+          "data": {
+            "topic": "person",
+            "wikidataId": "Q7259",
+            "period": "1815 – 1852",
+            "characters": [
+              {
+                "name": "Ada {{run}}"
+              }
+            ]
+          }
+        }
+      },
+      "save": {
+        "lovelace": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "Victorian era {{run}}",
+            "url": "https://www.wikidata.org/wiki/Q185852",
+            "topic": "era",
+            "kind": "dataset",
+            "wikidataId": "Q185852",
+            "period": "1837 – 1901",
+            "publisher": "Wikidata",
+            "license": "CC0 1.0",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": {
+          "data": {
+            "kind": "dataset",
+            "topic": "era"
+          }
+        }
+      },
+      "save": {
+        "era": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/sources/{{era}}?populate[scenes][fields][0]=title",
+        "body": {
+          "data": {
+            "scenes": {
+              "connect": [
+                "{{scene}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "scenes": [
+              {
+                "title": "The engine room {{run}}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "Bad id {{run}}",
+            "wikidataId": "7259"
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "name": "ValidationError"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "Bad topic {{run}}",
+            "topic": "planet"
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "name": "ValidationError"
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}?populate[characters][populate][sources][fields][0]=title&populate[scenes][populate][sources][fields][0]=title&populate[sources][populate][characters][fields][0]=name&populate[sources][populate][scenes][fields][0]=title&populate[sources][populate][stories][fields][0]=title&populate[sources][sort][0]=title:asc"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "characters": [
+              {
+                "name": "Ada {{run}}",
+                "sources": [
+                  {
+                    "title": "Ada Lovelace {{run}}"
+                  }
+                ]
+              }
+            ],
+            "scenes": [
+              {
+                "title": "The engine room {{run}}",
+                "sources": [
+                  {
+                    "title": "Victorian era {{run}}"
+                  }
+                ]
+              }
+            ],
+            "sources": [
+              {
+                "title": "Ada Lovelace {{run}}",
+                "characters": [
+                  {
+                    "name": "Ada {{run}}"
+                  }
+                ],
+                "scenes": [],
+                "stories": [
+                  {
+                    "title": "Orrery {{run}}"
+                  }
+                ]
+              },
+              {
+                "title": "Victorian era {{run}}",
+                "characters": [],
+                "scenes": [
+                  {
+                    "title": "The engine room {{run}}"
+                  }
+                ],
+                "stories": [
+                  {
+                    "title": "Orrery {{run}}"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/sources/{{lovelace}}?populate[characters][fields][0]=name",
+        "body": {
+          "data": {
+            "characters": {
+              "disconnect": [
+                "{{ada}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "characters": []
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/characters/{{ada}}?populate[sources][fields][0]=title"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "sources": []
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/sources/{{lovelace}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/sources/{{era}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/scenes/{{scene}}?populate[sources][fields][0]=title"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "sources": []
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/scenes/{{scene}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{ada}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    }
+  ]
+}

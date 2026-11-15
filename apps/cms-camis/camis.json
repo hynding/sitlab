@@ -102,6 +102,37 @@
         },
         {
           "type": "enumeration",
+          "name": "topic",
+          "values": [
+            "person",
+            "place",
+            "era",
+            "event",
+            "organization",
+            "work",
+            "other"
+          ]
+        },
+        {
+          "type": "string",
+          "name": "wikidataId",
+          "pattern": "^Q[0-9]+$"
+        },
+        {
+          "type": "text",
+          "name": "excerpt"
+        },
+        {
+          "type": "string",
+          "name": "period"
+        },
+        {
+          "type": "string",
+          "name": "imageUrl",
+          "pattern": "^https?://"
+        },
+        {
+          "type": "enumeration",
           "name": "kind",
           "values": [
             "article",
@@ -130,6 +161,20 @@
         {
           "type": "text",
           "name": "notes"
+        },
+        {
+          "type": "relation",
+          "name": "characters",
+          "relationKind": "manyToMany",
+          "target": "Character",
+          "inverse": "sources"
+        },
+        {
+          "type": "relation",
+          "name": "scenes",
+          "relationKind": "manyToMany",
+          "target": "Scene",
+          "inverse": "sources"
         }
       ],
       "options": {

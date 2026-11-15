@@ -126,6 +126,8 @@ export const characterRoles = ['protagonist', 'antagonist', 'deuteragonist', 'su
 export const plotLineKinds = ['a-plot', 'b-plot', 'c-plot', 'subplot', 'runner'] as const
 export const beatMoods = ['humor', 'drama', 'tension', 'release', 'romance', 'neutral'] as const
 export const timesOfDay = ['day', 'night', 'dawn', 'dusk', 'continuous'] as const
+export const sourceTopics = ['person', 'place', 'era', 'event', 'organization', 'work', 'other'] as const
+export const sourceKinds = ['article', 'book', 'dataset', 'image', 'video', 'audio', 'archive', 'other'] as const
 
 /** A repeatable component entry. `id` is absent on one that has not been saved yet. */
 export type Beat = { id?: number; title: string; description: string | null; mood: (typeof beatMoods)[number] }
@@ -137,6 +139,7 @@ export type Character = {
   role: (typeof characterRoles)[number]
   summary: string | null
   traits: Trait[]
+  sources: Pick<Source, 'documentId' | 'title'>[]
 }
 
 export type PlotLine = {
@@ -157,12 +160,35 @@ export type Scene = {
   screenplay: string | null
   characters: Pick<Character, 'documentId' | 'name'>[]
   plotLines: Pick<PlotLine, 'documentId' | 'title'>[]
+  sources: Pick<Source, 'documentId' | 'title'>[]
+}
+
+/** Researched material: a Wikipedia article, a Wikidata entity, or any page added by hand. */
+export type Source = {
+  documentId: string
+  title: string
+  url: string | null
+  topic: (typeof sourceTopics)[number] | null
+  kind: (typeof sourceKinds)[number]
+  wikidataId: string | null
+  excerpt: string | null
+  period: string | null
+  imageUrl: string | null
+  publisher: string | null
+  license: string | null
+  accessedOn: string | null
+  notes: string | null
+  characters: Pick<Character, 'documentId' | 'name'>[]
+  scenes: Pick<Scene, 'documentId' | 'title'>[]
+  /** The stories it belongs to; removing a source shared with another story only unlinks it. */
+  stories: { documentId: string }[]
 }
 
 export type StoryDetail = Story & {
   characters: Character[]
   plotLines: PlotLine[]
   scenes: Scene[]
+  sources: Source[]
 }
 
 /** Builds a Strapi query string; brackets stay readable, values are encoded. */
@@ -172,19 +198,25 @@ function query(params: [string, string | number][]): string {
 
 const storyPopulate = query([
   ['populate[characters][populate][traits]', 'true'],
+  ['populate[characters][populate][sources][fields][0]', 'title'],
   ['populate[characters][sort][0]', 'name:asc'],
   ['populate[plotLines][populate][beats]', 'true'],
   ['populate[plotLines][sort][0]', 'kind:asc'],
   ['populate[scenes][populate][characters][fields][0]', 'name'],
   ['populate[scenes][populate][plotLines][fields][0]', 'title'],
+  ['populate[scenes][populate][sources][fields][0]', 'title'],
   ['populate[scenes][sort][0]', 'position:asc'],
+  ['populate[sources][populate][characters][fields][0]', 'name'],
+  ['populate[sources][populate][scenes][fields][0]', 'title'],
+  ['populate[sources][populate][stories][fields][0]', 'title'],
+  ['populate[sources][sort][0]', 'title:asc'],
 ])
 
 export const getStory = (backend: Backend, documentId: string) =>
   request<{ data: StoryDetail }>(backend, `/stories/${encodeURIComponent(documentId)}${storyPopulate}`)
 
 /** The collections the workspace writes, by their REST plural. */
-type Collection = 'stories' | 'characters' | 'plot-lines' | 'scenes'
+type Collection = 'stories' | 'characters' | 'plot-lines' | 'scenes' | 'sources'
 
 export const createEntry = <T,>(backend: Backend, collection: Collection, data: object) =>
   request<{ data: T }>(backend, `/${collection}`, { method: 'POST', body: JSON.stringify({ data }) })

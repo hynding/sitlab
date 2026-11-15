@@ -67,6 +67,12 @@
       "relation": "oneToMany",
       "target": "api::character-arc.character-arc",
       "mappedBy": "character"
+    },
+    "sources": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::source.source",
+      "mappedBy": "characters"
     }
   }
 }

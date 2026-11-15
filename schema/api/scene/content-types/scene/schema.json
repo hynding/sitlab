@@ -61,6 +61,12 @@
       "type": "component",
       "repeatable": true,
       "component": "story.storyboard-frame"
+    },
+    "sources": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::source.source",
+      "mappedBy": "scenes"
     }
   }
 }

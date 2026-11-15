@@ -59,9 +59,16 @@ an API token in each admin (Settings > API Tokens) and put it in `apps/web/.env.
 
 To edit in the PWA, sign up from it and, in each admin, give the Authenticated role (Settings >
 Users & Permissions > Roles) `find`, `findOne`, `create`, `update` and `delete` on Story, Character,
-Plot-line and Scene. A story's page (`#/stories/<documentId>`) is its workspace: details, characters
-with traits, plot lines with beats tagged by mood, and scenes in order with their cast, plot lines and
-screenplay. `conformance/fixtures/workspace.json` replays the requests it makes.
+Plot-line, Scene and Source. A story's page (`#/stories/<documentId>`) is its workspace: details,
+characters with traits, plot lines with beats tagged by mood, scenes in order with their cast, plot
+lines and screenplay, and research. `conformance/fixtures/workspace.json` replays the requests it makes.
+
+The Research section searches Wikipedia or Wikidata from the browser (no CMS code involved; set
+`VITE_RESEARCH_LANG` for another Wikipedia language) and keeps what you attach as a Source: title, URL,
+excerpt, thumbnail, Wikidata id, a topic (person, place, era, event, organization, work) and a period
+read from Wikidata (birth and death, start and end, inception), with publisher and licence
+(Wikipedia CC BY-SA 4.0, Wikidata CC0). A source can be linked to any of the story's characters and
+scenes, which then show it as a chip. `conformance/fixtures/research.json` replays those requests.
 
 Both CMS apps use SQLite (`apps/*/.tmp/data.db`) for now. The deployed app will use MySQL: set
 `DATABASE_CLIENT=mysql` and the `DATABASE_*` connection variables; the Node app also needs the

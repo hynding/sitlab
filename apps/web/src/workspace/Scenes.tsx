@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { createEntry, deleteEntry, timesOfDay, updateEntry, type Backend, type Scene } from '../cms'
 import { useWorkspace } from './context'
 import { Choice } from './fields'
-import { label, orNull } from './format'
+import { label, orNull, scrollToResearch } from './format'
 
 /** Saves positions 0, 1, 2… in the given order, touching only scenes whose position changes. */
 async function renumber(backend: Backend, scenes: Scene[]): Promise<void> {
@@ -67,6 +67,15 @@ export function Scenes() {
                     <span key={c.documentId} className="tag person">
                       {c.name}
                     </span>
+                  ))}
+                </p>
+              )}
+              {s.sources.length > 0 && (
+                <p className="chips" aria-label="Research">
+                  {s.sources.map((r) => (
+                    <button type="button" key={r.documentId} className="tag research" onClick={scrollToResearch}>
+                      {r.title}
+                    </button>
                   ))}
                 </p>
               )}
