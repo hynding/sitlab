@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { characterRoles, createEntry, listCharacters, updateEntry, type Character, type Trait } from '../cms'
 import { useWorkspace } from './context'
 import { Choice } from './fields'
-import { label, orNull } from './format'
+import { label, orNull, scrollToResearch } from './format'
 
 /** The story's cast. A character can be in several stories, so removing one only unlinks it. */
 export function Characters() {
@@ -49,6 +49,15 @@ function CharacterCard({ character, onEdit }: { character: Character; onEdit?: (
             </div>
           ))}
         </dl>
+      )}
+      {character.sources.length > 0 && (
+        <p className="chips" aria-label="Research">
+          {character.sources.map((r) => (
+            <button type="button" key={r.documentId} className="tag research" onClick={scrollToResearch}>
+              {r.title}
+            </button>
+          ))}
+        </p>
       )}
       {onEdit && (
         <div className="row">

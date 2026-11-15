@@ -369,6 +369,71 @@ form.card {
   color: var(--accent);
 }
 
+.tag.research {
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tag .unlink {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  margin-left: 0.25rem;
+  padding: 0;
+}
+
+.card.source {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.source-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.thumb {
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: 6px;
+  flex: none;
+  background: var(--border);
+}
+
+.excerpt {
+  font-size: 0.9rem;
+}
+
+.source .notes {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.5rem;
+}
+
+.research-search {
+  margin-top: 1rem;
+}
+
+.research-search .results {
+  margin-top: 0.75rem;
+}
+
+.add-by-hand {
+  margin-top: 1rem;
+}
+
+.add-by-hand summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
