@@ -106,15 +106,17 @@ and `roles.json` here, write `deployment.env` with
 `camis import strapi apps/cms-php --out /tmp/ir.json --env-out apps/cms-camis/deployment.env`, then
 `camis build`.
 
-Checked end to end on 2026-11-14 (hynding/camis#66): all fixtures pass on strapi-php and CAMIS, and
+Checked end to end on 2026-11-15 (hynding/camis#73–#75): all fixtures pass on strapi-php and CAMIS, and
 an export from cms-php imported with `php artisan strapi:import` answers the content API the same,
-timestamps to the millisecond. What still differs from strapi-php:
+content timestamps to the millisecond. What still differs from strapi-php:
 
 - After `POST /api/auth/logout`, CAMIS refuses that session's access token at once; strapi-php honours
   it until it expires (the PWA drops it on logout either way).
 - `GET /api/i18n/locales` is a 404, as no sitlab type is localized; strapi-php lists `en`.
 - With Draft & Publish off, `publishedAt` repeats `createdAt`; strapi-php stores its own, a
   millisecond or two apart.
+- Users and roles live in Laravel's own tables, which keep timestamps to the second, so their
+  `createdAt` and `updatedAt` lose the milliseconds strapi-php keeps (content types keep them).
 - An app built before camis#66 keeps second-precision timestamp columns on MySQL/Postgres until they
   are rebuilt (`php artisan migrate:fresh` plus an import, or recreate the tables).
 

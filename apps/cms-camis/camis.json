@@ -9,6 +9,7 @@
         "plural": "Stories",
         "collection": "stories"
       },
+      "description": "A story, script or series being developed",
       "fields": [
         {
           "type": "string",
@@ -89,6 +90,7 @@
         "plural": "Sources",
         "collection": "sources"
       },
+      "description": "Researched public material a story draws on",
       "fields": [
         {
           "type": "string",
@@ -146,6 +148,7 @@
         "plural": "Scenes",
         "collection": "scenes"
       },
+      "description": "A scene, with its storyboard and screenplay text",
       "fields": [
         {
           "type": "string",
@@ -222,6 +225,7 @@
         "plural": "PlotLines",
         "collection": "plot_lines"
       },
+      "description": "An A/B/C plot, subplot or running gag within a story",
       "fields": [
         {
           "type": "string",
@@ -272,6 +276,7 @@
         "plural": "CharacterArcs",
         "collection": "character_arcs"
       },
+      "description": "How one character changes over one story",
       "fields": [
         {
           "type": "string",
@@ -320,6 +325,7 @@
         "plural": "Characters",
         "collection": "characters"
       },
+      "description": "A character, with traits and backstory",
       "fields": [
         {
           "type": "string",
@@ -425,6 +431,8 @@
         "collection": "components_story_beats",
         "group": "story"
       },
+      "description": "One beat of a plot line or arc",
+      "icon": "bulletList",
       "fields": [
         {
           "type": "string",
@@ -453,9 +461,12 @@
     {
       "name": "StoryboardFrame",
       "names": {
+        "display": "Storyboard frame",
         "collection": "components_story_storyboard_frames",
         "group": "story"
       },
+      "description": "One frame of a scene's storyboard",
+      "icon": "picture",
       "fields": [
         {
           "type": "media",
@@ -491,6 +502,8 @@
         "collection": "components_story_traits",
         "group": "story"
       },
+      "description": "A named trait, e.g. Flaw: impatient",
+      "icon": "user",
       "fields": [
         {
           "type": "string",
