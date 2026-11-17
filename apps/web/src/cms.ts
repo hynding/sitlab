@@ -59,7 +59,8 @@ async function send(backend: Backend, path: string, init: RequestInit, bearer: s
     credentials: 'include',
     headers: {
       Accept: 'application/json',
-      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      // a FormData body (an upload) sets its own multipart Content-Type
+      ...(typeof init.body === 'string' ? { 'Content-Type': 'application/json' } : {}),
       ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
       ...init.headers,
     },
@@ -127,11 +128,30 @@ export const plotLineKinds = ['a-plot', 'b-plot', 'c-plot', 'subplot', 'runner']
 export const beatMoods = ['humor', 'drama', 'tension', 'release', 'romance', 'neutral'] as const
 export const timesOfDay = ['day', 'night', 'dawn', 'dusk', 'continuous'] as const
 export const sourceTopics = ['person', 'place', 'era', 'event', 'organization', 'work', 'other'] as const
+export const shots = ['wide', 'medium', 'close-up', 'extreme-close-up', 'over-the-shoulder', 'pov', 'insert'] as const
 export const sourceKinds = ['article', 'book', 'dataset', 'image', 'video', 'audio', 'archive', 'other'] as const
 
 /** A repeatable component entry. `id` is absent on one that has not been saved yet. */
 export type Beat = { id?: number; title: string; description: string | null; mood: (typeof beatMoods)[number] }
 export type Trait = { id?: number; label: string; value: string | null }
+
+/** An uploaded file from the media library (the fields the app reads). */
+export type Media = {
+  id: number
+  name: string
+  url: string
+  alternativeText: string | null
+  width: number | null
+  height: number | null
+  formats: Partial<Record<'thumbnail' | 'small' | 'medium' | 'large', { url: string }>> | null
+}
+
+export type StoryboardFrame = {
+  id?: number
+  caption: string | null
+  shot: (typeof shots)[number] | null
+  image: Pick<Media, 'id' | 'name' | 'url' | 'alternativeText' | 'formats'> | null
+}
 
 export type Character = {
   documentId: string
@@ -161,6 +181,17 @@ export type Scene = {
   characters: Pick<Character, 'documentId' | 'name'>[]
   plotLines: Pick<PlotLine, 'documentId' | 'title'>[]
   sources: Pick<Source, 'documentId' | 'title'>[]
+  storyboard: StoryboardFrame[]
+}
+
+/** How one character changes over this story. */
+export type CharacterArc = {
+  documentId: string
+  title: string
+  startState: string | null
+  endState: string | null
+  beats: Beat[]
+  character: Pick<Character, 'documentId' | 'name'> | null
 }
 
 /** Researched material: a Wikipedia article, a Wikidata entity, or any page added by hand. */
@@ -189,6 +220,8 @@ export type StoryDetail = Story & {
   plotLines: PlotLine[]
   scenes: Scene[]
   sources: Source[]
+  /** null when the signed-in role may not read character arcs. */
+  arcs: CharacterArc[] | null
 }
 
 /** Builds a Strapi query string; brackets stay readable, values are encoded. */
@@ -205,6 +238,10 @@ const storyPopulate = query([
   ['populate[scenes][populate][characters][fields][0]', 'name'],
   ['populate[scenes][populate][plotLines][fields][0]', 'title'],
   ['populate[scenes][populate][sources][fields][0]', 'title'],
+  ['populate[scenes][populate][storyboard][populate][image][fields][0]', 'name'],
+  ['populate[scenes][populate][storyboard][populate][image][fields][1]', 'url'],
+  ['populate[scenes][populate][storyboard][populate][image][fields][2]', 'alternativeText'],
+  ['populate[scenes][populate][storyboard][populate][image][fields][3]', 'formats'],
   ['populate[scenes][sort][0]', 'position:asc'],
   ['populate[sources][populate][characters][fields][0]', 'name'],
   ['populate[sources][populate][scenes][fields][0]', 'title'],
@@ -212,11 +249,37 @@ const storyPopulate = query([
   ['populate[sources][sort][0]', 'title:asc'],
 ])
 
-export const getStory = (backend: Backend, documentId: string) =>
-  request<{ data: StoryDetail }>(backend, `/stories/${encodeURIComponent(documentId)}${storyPopulate}`)
+/**
+ * Character arcs point at their story without an inverse relation on Story, so they are listed
+ * by story rather than populated.
+ */
+const listArcs = (backend: Backend, storyId: string) =>
+  request<ListResponse<CharacterArc>>(
+    backend,
+    '/character-arcs' +
+      query([
+        ['filters[story][documentId][$eq]', storyId],
+        ['populate[beats]', 'true'],
+        ['populate[character][fields][0]', 'name'],
+        ['sort[0]', 'title:asc'],
+        ['pagination[pageSize]', 100],
+      ]),
+  )
+
+export async function getStory(backend: Backend, documentId: string): Promise<{ data: StoryDetail }> {
+  const [story, arcs] = await Promise.all([
+    request<{ data: Omit<StoryDetail, 'arcs'> }>(backend, `/stories/${encodeURIComponent(documentId)}${storyPopulate}`),
+    // a role without access to arcs still gets the rest of the story
+    listArcs(backend, documentId).catch((e) => {
+      if (e instanceof CmsError && (e.status === 401 || e.status === 403)) return null
+      throw e
+    }),
+  ])
+  return { data: { ...story.data, arcs: arcs?.data ?? null } }
+}
 
 /** The collections the workspace writes, by their REST plural. */
-type Collection = 'stories' | 'characters' | 'plot-lines' | 'scenes' | 'sources'
+type Collection = 'stories' | 'characters' | 'plot-lines' | 'scenes' | 'sources' | 'character-arcs'
 
 export const createEntry = <T,>(backend: Backend, collection: Collection, data: object) =>
   request<{ data: T }>(backend, `/${collection}`, { method: 'POST', body: JSON.stringify({ data }) })
@@ -226,6 +289,26 @@ export const updateEntry = <T,>(backend: Backend, collection: Collection, docume
 
 export const deleteEntry = (backend: Backend, collection: Collection, documentId: string) =>
   request<void>(backend, `/${collection}/${encodeURIComponent(documentId)}`, { method: 'DELETE' })
+
+/** Uploads files to the media library (Strapi's upload plugin) and returns them in order. */
+export function uploadFiles(backend: Backend, files: File[]): Promise<Media[]> {
+  const body = new FormData()
+  for (const file of files) body.append('files', file, file.name)
+  return request<Media[]>(backend, '/upload', { method: 'POST', body })
+}
+
+/** Removes an uploaded file from the media library. */
+export const deleteFile = (backend: Backend, id: number) =>
+  request<Media>(backend, `/upload/files/${id}`, { method: 'DELETE' })
+
+/** The local upload provider returns paths on the CMS; cloud providers return absolute URLs. */
+export function mediaUrl(backend: Backend, url: string): string {
+  return /^https?:\/\//.test(url) ? url : `${backends[backend].url.replace(/\/$/, '')}${url}`
+}
+
+/** A rendition of an image for a storyboard strip: the small format, else the thumbnail, else the original. */
+export const previewUrl = (backend: Backend, image: Pick<Media, 'url' | 'formats'>) =>
+  mediaUrl(backend, image.formats?.small?.url ?? image.formats?.thumbnail?.url ?? image.url)
 
 /** Characters for the "add an existing character" picker. */
 export const listCharacters = (backend: Backend) =>

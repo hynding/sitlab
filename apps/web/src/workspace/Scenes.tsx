@@ -1,8 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { createEntry, deleteEntry, timesOfDay, updateEntry, type Backend, type Scene } from '../cms'
+import { createEntry, deleteEntry, timesOfDay, updateEntry, type Backend, type Media, type Scene, type StoryboardFrame } from '../cms'
 import { useWorkspace } from './context'
 import { Choice } from './fields'
 import { label, orNull, scrollToResearch } from './format'
+import { downloadFountain } from './fountain'
+import { deleteUnused, storyboardData } from './edit'
+import { StoryboardEditor, StoryboardStrip } from './Storyboard'
 
 /** Saves positions 0, 1, 2… in the given order, touching only scenes whose position changes. */
 async function renumber(backend: Backend, scenes: Scene[]): Promise<void> {
@@ -35,7 +38,14 @@ export function Scenes() {
 
   return (
     <section className="ws-section" aria-labelledby="scenes">
-      <h2 id="scenes">Scenes</h2>
+      <div className="section-head">
+        <h2 id="scenes">Scenes</h2>
+        {scenes.length > 0 && (
+          <button type="button" className="secondary" onClick={() => downloadFountain(story)} title="A Fountain file opens in Highland, Fade In, WriterSolo and Final Draft">
+            Export screenplay
+          </button>
+        )}
+      </div>
       {scenes.length === 0 && <p className="muted">No scenes yet.</p>}
       <ol className="cards">
         {scenes.map((s, i) =>
@@ -79,6 +89,7 @@ export function Scenes() {
                   ))}
                 </p>
               )}
+              <StoryboardStrip frames={s.storyboard} />
               {s.screenplay && (
                 <details>
                   <summary>Screenplay</summary>
@@ -143,6 +154,8 @@ function SceneForm({ scene, onDone }: { scene: Scene; onDone: () => void }) {
   const [screenplay, setScreenplay] = useState(scene.screenplay ?? '')
   const [characters, setCharacters] = useState(scene.characters.map((c) => c.documentId))
   const [plotLines, setPlotLines] = useState(scene.plotLines.map((p) => p.documentId))
+  const [storyboard, setStoryboard] = useState<StoryboardFrame[]>(scene.storyboard)
+  const [uploaded, setUploaded] = useState<Media[]>([])
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -154,8 +167,17 @@ function SceneForm({ scene, onDone }: { scene: Scene; onDone: () => void }) {
       screenplay: screenplay.trim() ? screenplay : null,
       characters: { set: characters },
       plotLines: { set: plotLines },
+      storyboard: storyboardData(storyboard),
     }
-    if (await run(() => updateEntry(backend, 'scenes', scene.documentId, data))) onDone()
+    if (await run(() => updateEntry(backend, 'scenes', scene.documentId, data))) {
+      void deleteUnused(backend, uploaded, storyboard)
+      onDone()
+    }
+  }
+
+  function onCancel() {
+    void deleteUnused(backend, uploaded, [])
+    onDone()
   }
 
   return (
@@ -203,11 +225,12 @@ function SceneForm({ scene, onDone }: { scene: Scene; onDone: () => void }) {
         Screenplay
         <textarea className="screenplay" value={screenplay} rows={10} onChange={(e) => setScreenplay(e.target.value)} />
       </label>
+      <StoryboardEditor frames={storyboard} onChange={setStoryboard} onUploaded={(media) => setUploaded((u) => [...u, ...media])} />
       <div className="row">
         <button type="submit" disabled={busy}>
           Save
         </button>
-        <button type="button" className="secondary" onClick={onDone}>
+        <button type="button" className="secondary" onClick={onCancel}>
           Cancel
         </button>
       </div>

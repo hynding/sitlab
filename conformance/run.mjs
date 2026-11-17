@@ -17,7 +17,7 @@
  *   CONFORMANCE_ADMIN_EMAIL / CONFORMANCE_ADMIN_PASSWORD
  *                 an admin of each app. On a fresh database the first run registers it.
  *
- * Each fixture is a list of steps: `request` (method, path, and a JSON `body` or a file `upload`),
+ * Each fixture is a list of steps: `request` (method, path, and a JSON `body` or file `upload`s),
  * `expect` (status, body) and optional `save` ({ name: "data.documentId" }) to reuse a value later
  * as {{name}}. {{run}} is unique per run, so fixtures can filter to their own rows. Matching rules
  * are those of strapi-php's examples/plugins/announcements runner:
@@ -172,12 +172,16 @@ function diff(a, b, names, path = 'body') {
   });
 }
 
-/** A request's body: JSON, or with `upload` ({ name, type, base64 }) a multipart `files` upload. */
+/**
+ * A request's body: JSON, or with `upload` ({ name, type, base64 }, or a list of them) a multipart
+ * upload with one `files` part per file.
+ */
 function encodeBody(request) {
   if (request.upload) {
     const form = new FormData();
-    const { name, type, base64 } = request.upload;
-    form.append('files', new Blob([Buffer.from(base64, 'base64')], { type }), name);
+    for (const { name, type, base64 } of [request.upload].flat()) {
+      form.append('files', new Blob([Buffer.from(base64, 'base64')], { type }), name);
+    }
     return { body: form, headers: {} };
   }
   if (request.body === undefined) return { body: undefined, headers: {} };

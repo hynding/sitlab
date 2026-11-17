@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getStory, type Backend, type StoryDetail } from '../cms'
 import { describe } from '../errors'
+import { Arcs } from '../workspace/Arcs'
 import { Characters } from '../workspace/Characters'
 import { WorkspaceContext, type Workspace } from '../workspace/context'
 import { Details } from '../workspace/Details'
@@ -83,6 +84,7 @@ export function StoryWorkspace({ id, backend, signedIn }: { id: string; backend:
         )}
         <Details />
         <Characters />
+        <Arcs />
         <PlotLines />
         <Scenes />
         <Research />

@@ -59,9 +59,16 @@ an API token in each admin (Settings > API Tokens) and put it in `apps/web/.env.
 
 To edit in the PWA, sign up from it and, in each admin, give the Authenticated role (Settings >
 Users & Permissions > Roles) `find`, `findOne`, `create`, `update` and `delete` on Story, Character,
-Plot-line, Scene and Source. A story's page (`#/stories/<documentId>`) is its workspace: details,
-characters with traits, plot lines with beats tagged by mood, scenes in order with their cast, plot
-lines and screenplay, and research. `conformance/fixtures/workspace.json` replays the requests it makes.
+Character-arc, Plot-line, Scene and Source, and Upload's `upload` and `destroy` (for storyboard
+images). A story's page (`#/stories/<documentId>`) is its workspace: details, characters with traits,
+character arcs (start and end state, turning points), plot lines with beats tagged by mood, scenes in
+order with their cast, plot lines, storyboard and screenplay, and research.
+`conformance/fixtures/workspace.json` and `arcs-and-storyboards.json` replay the requests it makes.
+
+**Export screenplay** (Scenes) downloads the story as one [Fountain](https://fountain.io) file: a title
+page, then each scene in order as a scene heading built from its location and time of day (a heading
+that does not start with INT./EXT. gets Fountain's leading dot), its summary as a synopsis line (`=`),
+and its screenplay text. Highland, Fade In, WriterSolo, Slugline and Final Draft open it.
 
 The Research section searches Wikipedia or Wikidata from the browser (no CMS code involved; set
 `VITE_RESEARCH_LANG` for another Wikipedia language) and keeps what you attach as a Source: title, URL,
@@ -165,6 +172,12 @@ first one listed) with ids and timestamps masked. A backend can take a token ins
 - **Plugins enabled by default**: `hynding/strapi-php` is one package, so it also enables GraphQL,
   documentation and sentry, which a vanilla Node app does not have. `apps/cms-php/config/plugins.php`
   turns them off.
+- **Several files in one upload** (found 2026-11-17 by `arcs-and-storyboards.json`, the storyboard's
+  "Add frames from images"): strapi-php stored only the last file, Strapi all of them. PHP's own
+  multipart parser keeps only the last of a repeated `files` field; strapi::body keeps them all when
+  PHP leaves the body unparsed. Fixed in hynding/strapi-php#27 (the built-in server turns
+  `enable_post_data_reading` off); until `apps/cms-php`'s lock moves past it, `npm run dev:php` still
+  shows the difference. On DreamHost (PHP-FPM) `apps/cms-php/public/.user.ini` turns it off.
 
 ## Versions
 
