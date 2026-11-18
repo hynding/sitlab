@@ -562,3 +562,102 @@ pre.screenplay {
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
 }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.arc-states {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.arc-arrow {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.storyboard {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.frame {
+  flex: 0 0 11rem;
+  scroll-snap-align: start;
+  font-size: 0.85rem;
+}
+
+.frame img,
+.frame .frame-blank {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.frame img {
+  display: block;
+}
+
+.frame-blank {
+  display: grid;
+  place-items: center;
+  background: var(--border);
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.frame-text {
+  margin-top: 0.25rem;
+}
+
+.frame-edit {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--border);
+}
+
+.frame-edit .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.stacked-fields {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.file-button {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.file-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.file-button:focus-within {
+  outline: 2px solid var(--accent);
+}
