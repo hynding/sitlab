@@ -95,9 +95,11 @@ the other two apps. For the PWA, create a full-access API token in the admin
 where the API still lists them. `php artisan strapi:import-admins --database=../../../cms-php/.tmp/data.db`
 brings cms-php's admin accounts over instead, with their passwords.
 
-`deployment.env` is cms-php's `config/plugins.php`, `config/api.php` and `config/middlewares.php` as Laravel settings: the
+`deployment.env` is cms-php's `config/plugins.php`, `config/api.php`, `config/middlewares.php`, `config/server.php` and `config/admin.php` as Laravel settings: the
 upload allow and deny lists (an SVG is refused, as in strapi-php), the REST page sizes and the
-refresh-token sessions. CORS follows Strapi's defaults (any origin, with credentials, which the PWA
+refresh-token sessions, and the comments naming `API_TOKEN_SALT`, `TRANSFER_TOKEN_SALT` and
+`ADMIN_JWT_SECRET`: copy their values from `apps/cms-php/.env` so tokens brought over with
+`php artisan strapi:import-tokens` still verify. CORS follows Strapi's defaults (any origin, with credentials, which the PWA
 needs); set `CAMIS_CORS_ORIGIN` to a comma-separated list to narrow it.
 
 `camis.json` is imported from `apps/cms-php`, so it follows `schema/` only when re-imported: after a
@@ -106,19 +108,32 @@ and `roles.json` here, write `deployment.env` with
 `camis import strapi apps/cms-php --out /tmp/ir.json --env-out apps/cms-camis/deployment.env`, then
 `camis build`.
 
-Checked end to end on 2026-11-15 (hynding/camis#73–#75): all fixtures pass on strapi-php and CAMIS, and
-an export from cms-php imported with `php artisan strapi:import` answers the content API the same,
-content timestamps to the millisecond. What still differs from strapi-php:
+Checked end to end on 2026-11-18 (hynding/camis#82–#83, a freshly scaffolded app): all fixtures pass on
+strapi-php and CAMIS, and an export from cms-php imported with `php artisan strapi:import` answers
+`/api/users`, the users-permissions roles, `/api/i18n/locales` and every content type the same,
+timestamps to the millisecond, users and roles included. What still differs from strapi-php:
 
 - After `POST /api/auth/logout`, CAMIS refuses that session's access token at once; strapi-php honours
   it until it expires (the PWA drops it on logout either way).
-- `GET /api/i18n/locales` is a 404, as no sitlab type is localized; strapi-php lists `en`.
 - With Draft & Publish off, `publishedAt` repeats `createdAt`; strapi-php stores its own, a
   millisecond or two apart.
-- Users and roles live in Laravel's own tables, which keep timestamps to the second, so their
-  `createdAt` and `updatedAt` lose the milliseconds strapi-php keeps (content types keep them).
+- `GET /api/i18n/locales` answers anyone; strapi-php asks for the i18n plugin's `listLocales`
+  permission, which cms-php's roles don't hold, so it refuses a request without a token.
 - An app built before camis#66 keeps second-precision timestamp columns on MySQL/Postgres until they
   are rebuilt (`php artisan migrate:fresh` plus an import, or recreate the tables).
+
+**Upgrading an app scaffolded before camis#82** (users kept seconds): add to
+`generated/filament/app/Models/User.php` the method `camis scaffold` now writes, then `camis build`
+and `php artisan migrate`:
+
+```php
+public function getDateFormat(): string
+{
+    return trait_exists(\App\Models\Concerns\HasMillisecondTimestamps::class) ? 'Y-m-d H:i:s.v' : parent::getDateFormat();
+}
+```
+
+Users and roles imported before camis#83 keep seconds until they are imported again.
 
 ## Changing the content model
 
