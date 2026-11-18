@@ -73,6 +73,12 @@
       "relation": "manyToMany",
       "target": "api::source.source",
       "mappedBy": "characters"
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "private": true
     }
   }
 }

@@ -89,6 +89,12 @@
       "relation": "manyToMany",
       "target": "api::scene.scene",
       "inversedBy": "sources"
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "private": true
     }
   }
 }

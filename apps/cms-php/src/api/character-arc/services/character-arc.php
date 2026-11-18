@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /**
- * character-arc service
+ * character-arc service: the core service, restricted to the signed-in user's own documents
  */
 
-use Strapi\Core\Factories;
+require_once __DIR__ . '/../../../utils/ownership.php';
 
-return Factories::createCoreService('api::character-arc.character-arc');
+return \Sitlab\Utils\Ownership::service('api::character-arc.character-arc');

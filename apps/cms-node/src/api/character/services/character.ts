@@ -1,7 +1,7 @@
 /**
- * character service
+ * character service: the core service, restricted to the signed-in user's own documents
  */
 
-import { factories } from '@strapi/strapi';
+import { ownedService } from '../../../utils/ownership';
 
-export default factories.createCoreService('api::character.character');
+export default ownedService('api::character.character');

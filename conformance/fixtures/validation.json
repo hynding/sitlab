@@ -81,6 +81,35 @@
           }
         }
       }
+    },
+    {
+      "note": "a relation to a document that does not exist",
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Nobody {{run}}",
+            "role": "minor",
+            "stories": {
+              "connect": [
+                "no-such-story-{{run}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Document with id \"no-such-story-{{run}}\", locale \"null\" not found"
+          }
+        }
+      }
     }
   ]
 }

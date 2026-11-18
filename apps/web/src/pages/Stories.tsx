@@ -43,7 +43,7 @@ export function Stories({ backend, signedIn }: { backend: Backend; signedIn: boo
 
   return (
     <section>
-      <h1>Stories</h1>
+      <h1>{signedIn ? 'Your stories' : 'Stories'}</h1>
       {signedIn ? (
         <form onSubmit={onCreate}>
           <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -60,7 +60,7 @@ export function Stories({ backend, signedIn }: { backend: Backend; signedIn: boo
       {loading ? (
         <p>Loading…</p>
       ) : stories.length === 0 && !error ? (
-        <p>No stories yet.</p>
+        <p>{signedIn ? 'You have no stories yet. Each story you add is yours alone.' : 'No stories yet.'}</p>
       ) : (
         <ul className="stories">
           {stories.map((story) => (

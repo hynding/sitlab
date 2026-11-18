@@ -1,0 +1,874 @@
+{
+  "description": "Each user's stories, characters, plot lines, scenes, arcs and sources are theirs alone; API tokens are not restricted",
+  "grants": [
+    "api::story.story.find",
+    "api::story.story.findOne",
+    "api::story.story.create",
+    "api::story.story.update",
+    "api::story.story.delete",
+    "api::character.character.find",
+    "api::character.character.findOne",
+    "api::character.character.create",
+    "api::character.character.update",
+    "api::character.character.delete",
+    "api::character-arc.character-arc.find",
+    "api::character-arc.character-arc.findOne",
+    "api::character-arc.character-arc.create",
+    "api::character-arc.character-arc.update",
+    "api::character-arc.character-arc.delete",
+    "api::plot-line.plot-line.find",
+    "api::plot-line.plot-line.findOne",
+    "api::plot-line.plot-line.create",
+    "api::plot-line.plot-line.update",
+    "api::plot-line.plot-line.delete",
+    "api::scene.scene.find",
+    "api::scene.scene.findOne",
+    "api::scene.scene.create",
+    "api::scene.scene.update",
+    "api::scene.scene.delete",
+    "api::source.source.find",
+    "api::source.source.findOne",
+    "api::source.source.create",
+    "api::source.source.update",
+    "api::source.source.delete"
+  ],
+  "steps": [
+    {
+      "note": "two users sign up",
+      "auth": "none",
+      "request": {
+        "method": "POST",
+        "path": "/api/auth/local/register",
+        "body": {
+          "username": "alice-{{run}}",
+          "email": "alice-{{run}}@sitlab.local",
+          "password": "Alice-password-1"
+        }
+      },
+      "expect": {
+        "status": 200
+      },
+      "save": {
+        "alice": "jwt",
+        "aliceId": "user.id"
+      }
+    },
+    {
+      "auth": "none",
+      "request": {
+        "method": "POST",
+        "path": "/api/auth/local/register",
+        "body": {
+          "username": "bob-{{run}}",
+          "email": "bob-{{run}}@sitlab.local",
+          "password": "Bob-password-1"
+        }
+      },
+      "expect": {
+        "status": 200
+      },
+      "save": {
+        "bob": "jwt",
+        "bobId": "user.id"
+      }
+    },
+    {
+      "note": "Alice builds a story",
+      "auth": "{{alice}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Alice owns this {{run}}",
+            "format": "short"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "story": "data.documentId"
+      }
+    },
+    {
+      "note": "owner is private: it cannot be set, read or filtered on",
+      "auth": "{{alice}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Gift for Bob {{run}}",
+            "owner": "{{bobId}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Invalid key owner"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/stories/{{story}}",
+        "body": {
+          "data": {
+            "owner": "{{bobId}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Invalid key owner"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories?populate=owner"
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Invalid key owner"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories?filters[owner][id]={{bobId}}"
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Invalid key owner"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Mira {{run}}",
+            "role": "protagonist",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "mira": "data.documentId"
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/plot-lines",
+        "body": {
+          "data": {
+            "title": "Alice plot {{run}}",
+            "kind": "a-plot",
+            "story": "{{story}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "plot": "data.documentId"
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes",
+        "body": {
+          "data": {
+            "title": "Alice scene {{run}}",
+            "position": 1,
+            "story": "{{story}}",
+            "characters": [
+              "{{mira}}"
+            ],
+            "plotLines": {
+              "set": [
+                "{{plot}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "scene": "data.documentId"
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/character-arcs",
+        "body": {
+          "data": {
+            "title": "Mira arc {{run}}",
+            "story": "{{story}}",
+            "character": "{{mira}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "arc": "data.documentId"
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "Alice source {{run}}",
+            "url": "https://example.org/{{run}}",
+            "stories": [
+              "{{story}}"
+            ],
+            "scenes": [
+              "{{scene}}"
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "source": "data.documentId"
+      }
+    },
+    {
+      "note": "each user lists only their own stories",
+      "auth": "{{alice}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories?filters[title][$contains]={{run}}"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "title": "Alice owns this {{run}}"
+            }
+          ],
+          "meta": {
+            "pagination": {
+              "total": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories?filters[title][$contains]={{run}}"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": [],
+          "meta": {
+            "pagination": {
+              "total": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/characters?filters[name][$contains]={{run}}"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": []
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/scenes?filters[title][$contains]={{run}}"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": []
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/sources?filters[title][$contains]={{run}}"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": []
+        }
+      }
+    },
+    {
+      "note": "someone else's document is not found",
+      "auth": "{{bob}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 404,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 404,
+            "name": "NotFoundError",
+            "message": "Not Found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/characters/{{mira}}"
+      },
+      "expect": {
+        "status": 404,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 404,
+            "name": "NotFoundError",
+            "message": "Not Found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/character-arcs/{{arc}}"
+      },
+      "expect": {
+        "status": 404,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 404,
+            "name": "NotFoundError",
+            "message": "Not Found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/plot-lines/{{plot}}"
+      },
+      "expect": {
+        "status": 404,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 404,
+            "name": "NotFoundError",
+            "message": "Not Found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/stories/{{story}}",
+        "body": {
+          "data": {
+            "title": "Taken by Bob"
+          }
+        }
+      },
+      "expect": {
+        "status": 404,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 404,
+            "name": "NotFoundError",
+            "message": "Not Found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{scene}}",
+        "body": {
+          "data": {
+            "screenplay": "Bob was here"
+          }
+        }
+      },
+      "expect": {
+        "status": 404,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 404,
+            "name": "NotFoundError",
+            "message": "Not Found"
+          }
+        }
+      }
+    },
+    {
+      "note": "deleting it is a no-op, as for a missing document",
+      "auth": "{{bob}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{mira}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/sources/{{source}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "note": "nobody can link someone else's documents",
+      "auth": "{{bob}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes",
+        "body": {
+          "data": {
+            "title": "Bob scene {{run}}",
+            "story": "{{story}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Document with id \"{{story}}\" not found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Bob char {{run}}",
+            "role": "minor",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Document with id \"{{story}}\" not found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Bob owns this {{run}}",
+            "format": "feature"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "bobStory": "data.documentId"
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/stories/{{bobStory}}",
+        "body": {
+          "data": {
+            "scenes": {
+              "connect": [
+                "{{scene}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Document with id \"{{scene}}\" not found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/stories/{{bobStory}}",
+        "body": {
+          "data": {
+            "characters": [
+              {
+                "documentId": "{{mira}}"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Document with id \"{{mira}}\" not found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/sources",
+        "body": {
+          "data": {
+            "title": "Bob source {{run}}",
+            "url": "https://example.org/b{{run}}",
+            "characters": {
+              "set": [
+                "{{mira}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 400,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 400,
+            "name": "ValidationError",
+            "message": "Document with id \"{{mira}}\" not found"
+          }
+        }
+      }
+    },
+    {
+      "note": "Alice's story is untouched",
+      "auth": "{{alice}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}?populate[characters][fields][0]=name&populate[scenes][fields][0]=title&populate[plotLines][fields][0]=title&populate[sources][fields][0]=title"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "title": "Alice owns this {{run}}",
+            "characters": [
+              {
+                "name": "Mira {{run}}"
+              }
+            ],
+            "scenes": [
+              {
+                "title": "Alice scene {{run}}"
+              }
+            ],
+            "plotLines": [
+              {
+                "title": "Alice plot {{run}}"
+              }
+            ],
+            "sources": [
+              {
+                "title": "Alice source {{run}}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "note": "the owner edits as before",
+      "auth": "{{alice}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{scene}}?populate[characters][fields][0]=name",
+        "body": {
+          "data": {
+            "screenplay": "INT. LIGHTHOUSE",
+            "characters": {
+              "disconnect": [
+                "{{mira}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "screenplay": "INT. LIGHTHOUSE",
+            "characters": []
+          }
+        }
+      }
+    },
+    {
+      "note": "an API token sees everyone",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories?filters[title][$contains]={{run}}&sort=title"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "title": "Alice owns this {{run}}"
+            },
+            {
+              "title": "Bob owns this {{run}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/stories/{{story}}",
+        "body": {
+          "data": {
+            "logline": "Edited with an API token"
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "logline": "Edited with an API token"
+          }
+        }
+      }
+    },
+    {
+      "note": "the owner deletes",
+      "auth": "{{alice}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 404,
+        "body": {
+          "data": null,
+          "error": {
+            "status": 404,
+            "name": "NotFoundError",
+            "message": "Not Found"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{bob}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{bobStory}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{mira}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/plot-lines/{{plot}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/scenes/{{scene}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/character-arcs/{{arc}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "auth": "{{alice}}",
+      "request": {
+        "method": "DELETE",
+        "path": "/api/sources/{{source}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    }
+  ]
+}
