@@ -73,6 +73,13 @@
           "relationKind": "manyToMany",
           "target": "Source",
           "inverse": "stories"
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -175,6 +182,13 @@
           "relationKind": "manyToMany",
           "target": "Scene",
           "inverse": "sources"
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -251,6 +265,13 @@
           "name": "storyboard",
           "component": "StoryboardFrame",
           "repeatable": true
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -301,6 +322,13 @@
           "name": "beats",
           "component": "Beat",
           "repeatable": true
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -349,6 +377,13 @@
           "name": "beats",
           "component": "Beat",
           "repeatable": true
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -410,6 +445,13 @@
           "name": "traits",
           "component": "Trait",
           "repeatable": true
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {

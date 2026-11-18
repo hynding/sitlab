@@ -19,7 +19,10 @@
  *
  * Each fixture is a list of steps: `request` (method, path, and a JSON `body` or file `upload`s),
  * `expect` (status, body) and optional `save` ({ name: "data.documentId" }) to reuse a value later
- * as {{name}}. {{run}} is unique per run, so fixtures can filter to their own rows. Matching rules
+ * as {{name}}. A step sends the API token unless it sets `auth`: "none" sends no credentials, any
+ * other value (such as "{{aliceJwt}}", saved from a sign-up) is sent as the bearer token. A
+ * fixture's `grants` (["api::story.story.find", ...]) are enabled on the Authenticated role first,
+ * keeping what it already has. {{run}} is unique per run, so fixtures can filter to their own rows. Matching rules
  * are those of strapi-php's examples/plugins/announcements runner:
  *   objects  every expected key must match; extra keys are allowed unless `"$keys"` lists them all
  *   arrays   same length, matched element by element
@@ -144,10 +147,26 @@ function match(expected, actual, path = 'body') {
 
 /** Masks what legitimately differs between two databases, so the rest can be compared. */
 const VOLATILE = new Set(['id', 'documentId', 'createdAt', 'updatedAt', 'publishedAt', 'accessedOn']);
-function mask(value) {
-  if (Array.isArray(value)) return value.map(mask);
+const JWT = /^[\w-]+\.([\w-]+)\.[\w-]+$/;
+function mask(value, vars = {}) {
+  if (Array.isArray(value)) return value.map((v) => mask(v, vars));
   if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, VOLATILE.has(k) && v !== null ? `<${k}>` : mask(v)]));
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, VOLATILE.has(k) && v !== null ? `<${k}>` : mask(v, vars)]));
+  }
+  if (typeof value === 'string') {
+    // a JWT differs every time; its claim names should not
+    const jwt = value.match(JWT);
+    if (jwt) {
+      try {
+        return `<jwt ${Object.keys(JSON.parse(Buffer.from(jwt[1], 'base64url').toString())).sort().join(',')}>`;
+      } catch {}
+    }
+    // saved values (document ids) quoted in messages
+    let masked = value;
+    for (const [name, saved] of Object.entries(vars)) {
+      if (typeof saved === 'string' && saved.length >= 8) masked = masked.split(saved).join(`{{${name}}}`);
+    }
+    return masked;
   }
   return value;
 }
@@ -188,14 +207,48 @@ function encodeBody(request) {
   return { body: JSON.stringify(request.body), headers: { 'Content-Type': 'application/json' } };
 }
 
+/**
+ * Enables `grants` on the Authenticated role. The role update replaces the role's whole permission
+ * tree, so the current tree is read first and only switched on where needed.
+ */
+async function grantAuthenticated(backend, grants) {
+  const auth = { Authorization: `Bearer ${backend.apiToken}` };
+  const roles = await json(`${backend.url}/api/users-permissions/roles`, { headers: auth });
+  const role = roles.body?.roles?.find((r) => r.type === 'authenticated');
+  if (!role) throw new Error(`${backend.name}: no Authenticated role (${roles.status})`);
+  const current = await json(`${backend.url}/api/users-permissions/roles/${role.id}`, { headers: auth });
+  const permissions = current.body?.role?.permissions;
+  if (!permissions) throw new Error(`${backend.name}: could not read the Authenticated role (${current.status})`);
+  let changed = false;
+  for (const grant of grants) {
+    // api::story.story.find -> permissions['api::story'].controllers.story.find
+    const [, type, controller, action] = grant.match(/^(.+)\.([^.]+)\.([^.]+)$/) ?? [];
+    const entry = permissions[type]?.controllers?.[controller]?.[action];
+    if (!entry) throw new Error(`${backend.name}: unknown permission ${grant}`);
+    if (entry.enabled) continue;
+    entry.enabled = true;
+    changed = true;
+  }
+  // CAMIS takes its roles from roles.json and refuses this update; it grants them there
+  if (!changed) return;
+  const { name, description } = current.body.role;
+  const res = await json(`${backend.url}/api/users-permissions/roles/${role.id}`, {
+    method: 'PUT',
+    headers: auth,
+    body: JSON.stringify({ name, description, permissions }),
+  });
+  if (res.status !== 200) throw new Error(`${backend.name}: could not update the Authenticated role (${res.status}) ${JSON.stringify(res.body)}`);
+}
+
 async function runStep(backend, step, vars) {
   const request = substitute(step.request, vars);
   const { body: encoded, headers } = encodeBody(request);
+  const bearer = step.auth === undefined ? backend.apiToken : step.auth === 'none' ? null : substitute(step.auth, vars);
   const res = await fetch(backend.url + request.path, {
     method: request.method,
     headers: {
       Accept: 'application/json',
-      ...(step.auth === 'none' ? {} : { Authorization: `Bearer ${backend.apiToken}` }),
+      ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
       ...headers,
     },
     body: encoded,
@@ -213,6 +266,7 @@ async function runStep(backend, step, vars) {
 async function runFixture(fixture) {
   const vars = Object.fromEntries(backends.map((b) => [b.name, { run }]));
   const problems = [];
+  if (fixture.grants) for (const backend of backends) await grantAuthenticated(backend, fixture.grants);
   for (const [i, step] of fixture.steps.entries()) {
     const label = `step ${i + 1} (${step.request.method} ${step.request.path})`;
     const results = {};
@@ -228,7 +282,7 @@ async function runFixture(fixture) {
       const [a, b] = [results[other.name], results[reference.name]];
       const names = [other.name, reference.name];
       if (a.status !== b.status) problems.push(`differ ${label}: status ${other.name} ${a.status} / ${reference.name} ${b.status}`);
-      problems.push(...diff(mask(a.body), mask(b.body), names).map((d) => `differ ${label}: ${d}`));
+      problems.push(...diff(mask(a.body, vars[other.name]), mask(b.body, vars[reference.name]), names).map((d) => `differ ${label}: ${d}`));
     }
   }
   return problems;

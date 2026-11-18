@@ -1,7 +1,7 @@
 /**
- * scene service
+ * scene service: the core service, restricted to the signed-in user's own documents
  */
 
-import { factories } from '@strapi/strapi';
+import { ownedService } from '../../../utils/ownership';
 
-export default factories.createCoreService('api::scene.scene');
+export default ownedService('api::scene.scene');
