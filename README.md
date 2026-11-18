@@ -117,6 +117,8 @@ timestamps to the millisecond, users and roles included. What still differs from
   it until it expires (the PWA drops it on logout either way).
 - With Draft & Publish off, `publishedAt` repeats `createdAt`; strapi-php stores its own, a
   millisecond or two apart.
+- `GET /api/i18n/locales` answers anyone; strapi-php asks for the i18n plugin's `listLocales`
+  permission, which cms-php's roles don't hold, so it refuses a request without a token.
 - An app built before camis#66 keeps second-precision timestamp columns on MySQL/Postgres until they
   are rebuilt (`php artisan migrate:fresh` plus an import, or recreate the tables).
 
