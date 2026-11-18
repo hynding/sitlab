@@ -219,13 +219,18 @@ async function grantAuthenticated(backend, grants) {
   const current = await json(`${backend.url}/api/users-permissions/roles/${role.id}`, { headers: auth });
   const permissions = current.body?.role?.permissions;
   if (!permissions) throw new Error(`${backend.name}: could not read the Authenticated role (${current.status})`);
+  let changed = false;
   for (const grant of grants) {
     // api::story.story.find -> permissions['api::story'].controllers.story.find
     const [, type, controller, action] = grant.match(/^(.+)\.([^.]+)\.([^.]+)$/) ?? [];
     const entry = permissions[type]?.controllers?.[controller]?.[action];
     if (!entry) throw new Error(`${backend.name}: unknown permission ${grant}`);
+    if (entry.enabled) continue;
     entry.enabled = true;
+    changed = true;
   }
+  // CAMIS takes its roles from roles.json and refuses this update; it grants them there
+  if (!changed) return;
   const { name, description } = current.body.role;
   const res = await json(`${backend.url}/api/users-permissions/roles/${role.id}`, {
     method: 'PUT',

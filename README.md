@@ -167,6 +167,18 @@ timestamps to the millisecond. What still differs from strapi-php:
 - `GET /api/i18n/locales` is a 404, as no sitlab type is localized; strapi-php lists `en`.
 - With Draft & Publish off, `publishedAt` repeats `createdAt`; strapi-php stores its own, a
   millisecond or two apart.
+- Ownership (2026-11-18, `ownership.json`, camis at 2a05bc2): CAMIS expresses it in `roles.json` (the
+  Authenticated role's grants on the six story types, conditioned on `record.ownerId == user.id`,
+  with `assign: { owner: user.id }`), so it holds those grants without the admin giving them, and
+  its role cannot be changed through `/api/users-permissions/roles` (the runner skips the update
+  when the grants are already on). Lists, 404s and refused links match, with these differences:
+  `owner` in a body is ignored rather than a 400 `Invalid key owner`; deleting someone else's
+  document is a 404 rather than a 204; a refused link says `locale ""` (CAMIS recorded the
+  strapi-php message that hynding/strapi-php#29 fixes); and its refresh tokens are opaque rather
+  than JWTs.
+- Deleting a story that still has plot lines or scenes, or a character that has arcs, is a 400
+  `Validation failed` on CAMIS; Strapi unlinks them and deletes. Found by `ownership.json`, with an
+  API token too, so not an ownership rule.
 - An app built before camis#66 keeps second-precision timestamp columns on MySQL/Postgres until they
   are rebuilt (`php artisan migrate:fresh` plus an import, or recreate the tables).
 
