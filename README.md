@@ -219,11 +219,6 @@ is compared by its claim names, and a saved value quoted in a message by its nam
 - **Plugins enabled by default**: `hynding/strapi-php` is one package, so it also enables GraphQL,
   documentation and sentry, which a vanilla Node app does not have. `apps/cms-php/config/plugins.php`
   turns them off.
-- **Refresh token claims** (`ownership.json`, the sign-up steps): Strapi signs refresh tokens with
-  `noTimestamp`, so they carry no `iat`; strapi-php's did. Fixed in hynding/strapi-php#29.
-- **Missing relation target** (`validation.json`, last step): Strapi says
-  `Document with id "…", locale "null" not found`, strapi-php said `locale ""`. Fixed in
-  hynding/strapi-php#29. Both entries go once cms-php's lock includes it.
 
 ## Versions
 
