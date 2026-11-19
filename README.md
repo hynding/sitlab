@@ -111,14 +111,15 @@ and `roles.json` here, write `deployment.env` with
 Checked end to end on 2026-11-18 (hynding/camis#82–#83, a freshly scaffolded app): all fixtures pass on
 strapi-php and CAMIS, and an export from cms-php imported with `php artisan strapi:import` answers
 `/api/users`, the users-permissions roles, `/api/i18n/locales` and every content type the same,
-timestamps to the millisecond, users and roles included. What still differs from strapi-php:
+timestamps to the millisecond, users and roles included. Since hynding/camis#84, CAMIS asks for the
+i18n plugin's `listLocales` permission on `/api/i18n/locales` as strapi-php does: cms-php's roles
+don't hold it, so both refuse a request without a token (re-importing on 2026-11-19 gave the same
+`roles.json`). What still differs from strapi-php:
 
 - After `POST /api/auth/logout`, CAMIS refuses that session's access token at once; strapi-php honours
   it until it expires (the PWA drops it on logout either way).
 - With Draft & Publish off, `publishedAt` repeats `createdAt`; strapi-php stores its own, a
   millisecond or two apart.
-- `GET /api/i18n/locales` answers anyone; strapi-php asks for the i18n plugin's `listLocales`
-  permission, which cms-php's roles don't hold, so it refuses a request without a token.
 - An app built before camis#66 keeps second-precision timestamp columns on MySQL/Postgres until they
   are rebuilt (`php artisan migrate:fresh` plus an import, or recreate the tables).
 
