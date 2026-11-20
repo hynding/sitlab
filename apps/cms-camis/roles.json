@@ -1,0 +1,233 @@
+{
+  "defaultRole": "authenticated",
+  "roles": [
+    {
+      "name": "public",
+      "description": "Default role given to unauthenticated user.",
+      "grants": []
+    },
+    {
+      "name": "authenticated",
+      "description": "Default role given to authenticated user.",
+      "grants": [
+        {
+          "contentType": "Story",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "Character",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "CharacterArc",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "PlotLine",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "Scene",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "Source",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        }
+      ]
+    },
+    {
+      "name": "super-admin",
+      "description": "Signs in to the admin and may do everything, as Strapi's Super Admin.",
+      "admin": true,
+      "grants": [
+        {
+          "contentType": "Story",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "Source",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "Scene",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "PlotLine",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "CharacterArc",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "Character",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "File",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        {
+          "contentType": "User",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        }
+      ]
+    }
+  ]
+}

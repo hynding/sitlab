@@ -1,0 +1,98 @@
+{
+  "description": "A story's synopsis and a character's backstory as rich-text blocks",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Lighthouse {{run}}",
+            "synopsis": [
+              { "type": "heading", "level": 2, "children": [{ "type": "text", "text": "Act one" }] },
+              {
+                "type": "paragraph",
+                "children": [
+                  { "type": "text", "text": "A keeper " },
+                  { "type": "text", "text": "refuses", "bold": true },
+                  { "type": "text", "text": " to leave. " },
+                  { "type": "link", "url": "https://example.org/lighthouses", "children": [{ "type": "text", "text": "Research" }] }
+                ]
+              },
+              {
+                "type": "list",
+                "format": "unordered",
+                "children": [
+                  { "type": "list-item", "children": [{ "type": "text", "text": "Storm" }] },
+                  { "type": "list-item", "children": [{ "type": "text", "text": "Rescue" }] }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": {
+          "data": {
+            "title": "Lighthouse {{run}}",
+            "synopsis": [
+              { "type": "heading", "level": 2 },
+              { "type": "paragraph" },
+              { "type": "list", "format": "unordered" }
+            ]
+          }
+        }
+      },
+      "save": {
+        "story": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}?fields[0]=title&fields[1]=synopsis"
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Keeper {{run}}",
+            "backstory": [{ "type": "quote", "children": [{ "type": "text", "text": "The light stays on." }] }]
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": { "data": { "backstory": [{ "type": "quote" }] } }
+      },
+      "save": {
+        "character": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{character}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    }
+  ]
+}

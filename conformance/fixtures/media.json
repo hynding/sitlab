@@ -1,0 +1,159 @@
+{
+  "description": "An uploaded image as a character's portrait and in a scene's storyboard frame",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/upload",
+        "upload": {
+          "name": "frame-{{run}}.png",
+          "type": "image/png",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAADUlEQVR4nGP4zwAE/wEHAAH/4iOeWQAAAABJRU5ErkJggg=="
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": [
+          {
+            "name": "frame-{{run}}.png",
+            "mime": "image/png",
+            "ext": ".png",
+            "width": 2,
+            "height": 1
+          }
+        ]
+      },
+      "save": {
+        "file": "0.id"
+      },
+      "skipCompare": true
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Ines {{run}}",
+            "portrait": "{{file}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "character": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/characters/{{character}}?fields[0]=name&populate[portrait][fields][0]=name&populate[portrait][fields][1]=mime&populate[portrait][fields][2]=width&populate[portrait][fields][3]=height"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "name": "Ines {{run}}",
+            "portrait": {
+              "name": "frame-{{run}}.png",
+              "mime": "image/png",
+              "width": 2,
+              "height": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes",
+        "body": {
+          "data": {
+            "title": "Harbour at dawn {{run}}",
+            "timeOfDay": "dawn",
+            "storyboard": [
+              {
+                "caption": "Boats come in",
+                "shot": "wide",
+                "image": "{{file}}"
+              },
+              {
+                "caption": "Mara waits",
+                "shot": "close-up"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "scene": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/scenes/{{scene}}?fields[0]=title&populate[storyboard][populate][image][fields][0]=name&populate[storyboard][populate][image][fields][1]=mime"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "title": "Harbour at dawn {{run}}",
+            "storyboard": [
+              {
+                "caption": "Boats come in",
+                "shot": "wide",
+                "image": {
+                  "name": "frame-{{run}}.png",
+                  "mime": "image/png"
+                }
+              },
+              {
+                "caption": "Mara waits",
+                "shot": "close-up",
+                "image": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/scenes/{{scene}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{character}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/upload/files/{{file}}"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "name": "frame-{{run}}.png"
+        }
+      },
+      "skipCompare": true
+    }
+  ]
+}

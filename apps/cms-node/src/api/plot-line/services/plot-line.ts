@@ -1,7 +1,7 @@
 /**
- * plot-line service
+ * plot-line service: the core service, restricted to the signed-in user's own documents
  */
 
-import { factories } from '@strapi/strapi';
+import { ownedService } from '../../../utils/ownership';
 
-export default factories.createCoreService('api::plot-line.plot-line');
+export default ownedService('api::plot-line.plot-line');

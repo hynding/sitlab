@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /**
- * story service
+ * story service: the core service, restricted to the signed-in user's own documents
  */
 
-use Strapi\Core\Factories;
+require_once __DIR__ . '/../../../utils/ownership.php';
 
-return Factories::createCoreService('api::story.story');
+return \Sitlab\Utils\Ownership::service('api::story.story');

@@ -1,18 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { backends, CmsError, createStory, listStories, type Backend, type Story } from '../cms'
+import { createStory, listStories, type Backend, type Story } from '../cms'
+import { describe } from '../errors'
+import { href } from '../router'
 
-function describe(e: unknown, backend: Backend): string {
-  if (e instanceof CmsError && (e.status === 401 || e.status === 403)) {
-    // the token hint is for local development only; a deployed build never carries a token
-    return import.meta.env.DEV
-      ? `${backends[backend].label} refused the request (${e.status}). Sign in, or set VITE_CMS_${backend.toUpperCase()}_TOKEN in apps/web/.env.local to an API token from its admin panel.`
-      : 'You do not have access to this yet.'
-  }
-  if (e instanceof CmsError) return e.message
-  return import.meta.env.DEV
-    ? `${backends[backend].label} is not reachable at ${backends[backend].url}. Is it running?`
-    : 'Sitlab cannot be reached right now. Please try again later.'
-}
 
 export function Stories({ backend, signedIn }: { backend: Backend; signedIn: boolean }) {
   const [version, setVersion] = useState(0)
@@ -53,7 +43,7 @@ export function Stories({ backend, signedIn }: { backend: Backend; signedIn: boo
 
   return (
     <section>
-      <h1>Stories</h1>
+      <h1>{signedIn ? 'Your stories' : 'Stories'}</h1>
       {signedIn ? (
         <form onSubmit={onCreate}>
           <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -70,12 +60,14 @@ export function Stories({ backend, signedIn }: { backend: Backend; signedIn: boo
       {loading ? (
         <p>Loading…</p>
       ) : stories.length === 0 && !error ? (
-        <p>No stories yet.</p>
+        <p>{signedIn ? 'You have no stories yet. Each story you add is yours alone.' : 'No stories yet.'}</p>
       ) : (
         <ul className="stories">
           {stories.map((story) => (
             <li key={story.documentId}>
-              <strong>{story.title}</strong>
+              <a className="title" href={href({ name: 'story', id: story.documentId })}>
+                {story.title}
+              </a>
               <span className="meta">
                 {story.format} · {story.status}
                 {story.genre ? ` · ${story.genre}` : ''}

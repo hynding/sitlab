@@ -1,0 +1,13 @@
+{
+  "ir": "./camis.json",
+  "roles": "./roles.json",
+  "protected": "./protected",
+  "targets": [
+    {
+      "target": "filament",
+      "out": "./generated/filament",
+      "projectName": "cms-camis",
+      "apiStyle": "strapi"
+    }
+  ]
+}
