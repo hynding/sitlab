@@ -9,7 +9,146 @@
     {
       "name": "authenticated",
       "description": "Default role given to authenticated user.",
-      "grants": []
+      "grants": [
+        {
+          "contentType": "Story",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "Character",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "CharacterArc",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "PlotLine",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "Scene",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        },
+        {
+          "contentType": "Source",
+          "actions": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ],
+          "condition": {
+            "kind": "eq",
+            "left": {
+              "kind": "var",
+              "name": "record.ownerId"
+            },
+            "right": {
+              "kind": "var",
+              "name": "user.id"
+            }
+          },
+          "assign": {
+            "owner": "user.id"
+          }
+        }
+      ]
     },
     {
       "name": "super-admin",

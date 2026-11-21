@@ -81,6 +81,7 @@ ssl
 .idea
 nbproject
 public/uploads/*
+public/admin
 !public/uploads/.gitkeep
 .tsbuildinfo
 .eslintcache
@@ -130,6 +131,9 @@ vendor
 ############################
 
 .env
+.env.*
+!.env.example
+!.env.deploy.example
 license.txt
 exports
 .strapi

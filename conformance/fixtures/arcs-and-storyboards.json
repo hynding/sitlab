@@ -1,0 +1,431 @@
+{
+  "description": "What character arcs and storyboards send: arcs listed by story, beats and frames edited by id, two images in one upload, images set, replaced and cleared",
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Tidewater {{run}}",
+            "format": "short"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "story": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Oda {{run}}",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "oda": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Pim {{run}}",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "pim": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/character-arcs",
+        "body": {
+          "data": {
+            "title": "Learns to trust {{run}}",
+            "character": "{{oda}}",
+            "story": "{{story}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": {
+          "data": {
+            "title": "Learns to trust {{run}}",
+            "startState": null,
+            "endState": null
+          }
+        }
+      },
+      "save": {
+        "arc": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/character-arcs",
+        "body": {
+          "data": {
+            "title": "Arc in another story {{run}}",
+            "character": "{{oda}}"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "stray": "data.documentId"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/character-arcs/{{arc}}?populate=beats",
+        "body": {
+          "data": {
+            "title": "Learns to trust {{run}}",
+            "character": "{{oda}}",
+            "startState": "Trusts no one",
+            "endState": "Asks for help",
+            "beats": [
+              {
+                "title": "Refuses the rope",
+                "mood": "drama"
+              },
+              {
+                "title": "Pim's bad joke",
+                "mood": "humor"
+              },
+              {
+                "title": "Takes the hand",
+                "description": "At the breakwater",
+                "mood": "release"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      },
+      "save": {
+        "b0": "data.beats.0.id",
+        "b2": "data.beats.2.id"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/character-arcs/{{arc}}",
+        "body": {
+          "data": {
+            "character": "{{pim}}",
+            "beats": [
+              {
+                "id": "{{b2}}",
+                "title": "Takes the hand",
+                "description": "At the breakwater",
+                "mood": "release"
+              },
+              {
+                "id": "{{b0}}",
+                "title": "Refuses the rope",
+                "description": null,
+                "mood": "tension"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/character-arcs?filters[story][documentId][$eq]={{story}}&populate[beats]=true&populate[character][fields][0]=name&sort[0]=title:asc&pagination[pageSize]=100"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "title": "Learns to trust {{run}}",
+              "startState": "Trusts no one",
+              "endState": "Asks for help",
+              "character": {
+                "name": "Pim {{run}}"
+              },
+              "beats": [
+                {
+                  "id": "{{b2}}",
+                  "title": "Takes the hand",
+                  "description": "At the breakwater",
+                  "mood": "release"
+                },
+                {
+                  "id": "{{b0}}",
+                  "title": "Refuses the rope",
+                  "description": null,
+                  "mood": "tension"
+                }
+              ]
+            }
+          ],
+          "meta": {
+            "pagination": {
+              "page": 1,
+              "pageSize": 100,
+              "pageCount": 1,
+              "total": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/upload",
+        "upload": [
+          {
+            "name": "board-a-{{run}}.png",
+            "type": "image/png",
+            "base64": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAADUlEQVR4nGP4zwAE/wEHAAH/4iOeWQAAAABJRU5ErkJggg=="
+          },
+          {
+            "name": "board-b-{{run}}.png",
+            "type": "image/png",
+            "base64": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAADUlEQVR4nGP4zwAE/wEHAAH/4iOeWQAAAABJRU5ErkJggg=="
+          }
+        ]
+      },
+      "expect": {
+        "status": 201,
+        "body": [
+          {
+            "name": "board-a-{{run}}.png"
+          },
+          {
+            "name": "board-b-{{run}}.png"
+          }
+        ]
+      },
+      "save": {
+        "fileA": "0.id",
+        "fileB": "1.id"
+      },
+      "skipCompare": true
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes?populate=storyboard",
+        "body": {
+          "data": {
+            "title": "Breakwater {{run}}",
+            "position": 0,
+            "story": "{{story}}",
+            "storyboard": [
+              {
+                "caption": "Waves",
+                "shot": "wide",
+                "image": "{{fileA}}"
+              },
+              {
+                "caption": "Oda's hand",
+                "shot": "insert"
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "scene": "data.documentId",
+        "f0": "data.storyboard.0.id",
+        "f1": "data.storyboard.1.id"
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{scene}}",
+        "body": {
+          "data": {
+            "storyboard": [
+              {
+                "id": "{{f1}}",
+                "caption": "Oda's hand",
+                "shot": "insert",
+                "image": "{{fileB}}"
+              },
+              {
+                "id": "{{f0}}",
+                "caption": null,
+                "shot": "wide",
+                "image": null
+              },
+              {
+                "caption": "Pim watches",
+                "shot": null,
+                "image": null
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}?populate[scenes][populate][storyboard][populate][image][fields][0]=name&populate[scenes][populate][storyboard][populate][image][fields][1]=alternativeText&populate[scenes][populate][storyboard][populate][image][fields][2]=formats&populate[scenes][sort][0]=position:asc"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "title": "Tidewater {{run}}",
+            "scenes": [
+              {
+                "title": "Breakwater {{run}}",
+                "storyboard": [
+                  {
+                    "id": "{{f1}}",
+                    "caption": "Oda's hand",
+                    "shot": "insert",
+                    "image": {
+                      "name": "board-b-{{run}}.png",
+                      "alternativeText": null
+                    }
+                  },
+                  {
+                    "id": "{{f0}}",
+                    "caption": null,
+                    "shot": "wide",
+                    "image": null
+                  },
+                  {
+                    "caption": "Pim watches",
+                    "shot": null,
+                    "image": null
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/upload/files/{{fileA}}"
+      },
+      "expect": {
+        "status": 200
+      },
+      "skipCompare": true
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/scenes/{{scene}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/upload/files/{{fileB}}"
+      },
+      "expect": {
+        "status": 200
+      },
+      "skipCompare": true
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/character-arcs/{{arc}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/character-arcs/{{stray}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{oda}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/characters/{{pim}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "path": "/api/stories/{{story}}"
+      },
+      "expect": {
+        "status": 204
+      }
+    }
+  ]
+}

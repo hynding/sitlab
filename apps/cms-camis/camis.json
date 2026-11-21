@@ -74,6 +74,13 @@
           "relationKind": "manyToMany",
           "target": "Source",
           "inverse": "stories"
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -100,6 +107,37 @@
         {
           "type": "string",
           "name": "url",
+          "pattern": "^https?://"
+        },
+        {
+          "type": "enumeration",
+          "name": "topic",
+          "values": [
+            "person",
+            "place",
+            "era",
+            "event",
+            "organization",
+            "work",
+            "other"
+          ]
+        },
+        {
+          "type": "string",
+          "name": "wikidataId",
+          "pattern": "^Q[0-9]+$"
+        },
+        {
+          "type": "text",
+          "name": "excerpt"
+        },
+        {
+          "type": "string",
+          "name": "period"
+        },
+        {
+          "type": "string",
+          "name": "imageUrl",
           "pattern": "^https?://"
         },
         {
@@ -132,6 +170,27 @@
         {
           "type": "text",
           "name": "notes"
+        },
+        {
+          "type": "relation",
+          "name": "characters",
+          "relationKind": "manyToMany",
+          "target": "Character",
+          "inverse": "sources"
+        },
+        {
+          "type": "relation",
+          "name": "scenes",
+          "relationKind": "manyToMany",
+          "target": "Scene",
+          "inverse": "sources"
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -209,6 +268,13 @@
           "name": "storyboard",
           "component": "StoryboardFrame",
           "repeatable": true
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -260,6 +326,13 @@
           "name": "beats",
           "component": "Beat",
           "repeatable": true
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -309,6 +382,13 @@
           "name": "beats",
           "component": "Beat",
           "repeatable": true
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {
@@ -371,6 +451,13 @@
           "name": "traits",
           "component": "Trait",
           "repeatable": true
+        },
+        {
+          "type": "relation",
+          "name": "owner",
+          "relationKind": "manyToOne",
+          "target": "User",
+          "private": true
         }
       ],
       "options": {

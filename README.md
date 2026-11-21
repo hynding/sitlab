@@ -42,6 +42,8 @@ scripts/init-env.mjs     creates each CMS app's .env with fresh secrets
 | Scene | position, location, time of day, summary, screenplay text, storyboard frames |
 | Source | researched public material: URL, kind, publisher, license, date accessed, notes |
 
+Every type also has a private `owner`, the user who created it (see [Ownership](#ownership)).
+
 ## Getting started
 
 Needs PHP 8.3 (`pdo_sqlite`, `intl`, `gd`), Composer, and Node 20+.
@@ -57,9 +59,59 @@ Create an admin in each CMS on first visit. The content API is closed by default
 an API token in each admin (Settings > API Tokens) and put it in `apps/web/.env.local`
 (see `apps/web/.env.example`).
 
+To edit in the PWA, sign up from it and, in each admin, give the Authenticated role (Settings >
+Users & Permissions > Roles) `find`, `findOne`, `create`, `update` and `delete` on Story, Character,
+Character-arc, Plot-line, Scene and Source, and Upload's `upload` (for storyboard images). Leave
+Upload's `destroy` off on a deployed app: it would let any user delete any file (see
+[Ownership](#ownership)); the PWA's clean-up of discarded uploads then just leaves them in the media
+library. A story's page (`#/stories/<documentId>`) is its workspace: details, characters with traits,
+character arcs (start and end state, turning points), plot lines with beats tagged by mood, scenes in
+order with their cast, plot lines, storyboard and screenplay, and research.
+`conformance/fixtures/workspace.json` and `arcs-and-storyboards.json` replay the requests it makes.
+
+**Export screenplay** (Scenes) downloads the story as one [Fountain](https://fountain.io) file: a title
+page, then each scene in order as a scene heading built from its location and time of day (a heading
+that does not start with INT./EXT. gets Fountain's leading dot), its summary as a synopsis line (`=`),
+and its screenplay text. Highland, Fade In, WriterSolo, Slugline and Final Draft open it.
+
+The Research section searches Wikipedia or Wikidata from the browser (no CMS code involved; set
+`VITE_RESEARCH_LANG` for another Wikipedia language) and keeps what you attach as a Source: title, URL,
+excerpt, thumbnail, Wikidata id, a topic (person, place, era, event, organization, work) and a period
+read from Wikidata (birth and death, start and end, inception), with publisher and licence
+(Wikipedia CC BY-SA 4.0, Wikidata CC0). A source can be linked to any of the story's characters and
+scenes, which then show it as a chip. `conformance/fixtures/research.json` replays those requests.
+
 Both CMS apps use SQLite (`apps/*/.tmp/data.db`) for now. The deployed app will use MySQL: set
 `DATABASE_CLIENT=mysql` and the `DATABASE_*` connection variables; the Node app also needs the
 `mysql2` package then.
+
+`dev` and `main` deploy cms-php and the PWA to DreamHost through GitHub Actions; see
+[docs/deploying.md](docs/deploying.md).
+
+## Ownership
+
+Each Story, Character, Character arc, Plot line, Scene and Source belongs to the user who created
+it, so sign-ups can be open. With a users-permissions sign-in (the PWA's), a user:
+
+- lists only their own documents (`GET /api/stories` and the rest are filtered by owner);
+- gets a 404 for anyone else's document, on `GET` and `PUT`; a `DELETE` of it deletes nothing and
+  answers 204, as for a document that does not exist;
+- can only link documents they own: connecting someone else's story, character or scene is a 400
+  `Document with id "…" not found`, so nobody can add a scene to another person's story.
+
+`owner` is set on create and is private: the content API never shows it and refuses it in a body,
+`filters` or `populate` (400 `Invalid key owner`). API tokens and the admin panel are not
+restricted, and the admin panel is where an owner is changed.
+
+The rules live in one service wrapper, `apps/cms-node/src/utils/ownership.ts` and
+`apps/cms-php/src/utils/ownership.php`, used by each type's service (`src/api/*/services/*`), so the
+core controllers still do validation, sanitizing and responses. It applies to any type whose schema
+has an `owner` relation to `plugin::users-permissions.user`. `conformance/fixtures/ownership.json`
+signs up two users and checks all of the above.
+
+Content created before ownership has no owner, so no signed-in user sees it: set its Owner in the
+admin panel. Uploaded files have no owner yet: anyone signed in can attach a file by id, and with
+Upload's `destroy` granted, delete any file.
 
 ## The CAMIS backend
 
@@ -120,6 +172,18 @@ don't hold it, so both refuse a request without a token (re-importing on 2026-11
   it until it expires (the PWA drops it on logout either way).
 - With Draft & Publish off, `publishedAt` repeats `createdAt`; strapi-php stores its own, a
   millisecond or two apart.
+- Ownership (2026-11-18, `ownership.json`, camis at 2a05bc2): CAMIS expresses it in `roles.json` (the
+  Authenticated role's grants on the six story types, conditioned on `record.ownerId == user.id`,
+  with `assign: { owner: user.id }`), so it holds those grants without the admin giving them, and
+  its role cannot be changed through `/api/users-permissions/roles` (the runner skips the update
+  when the grants are already on). Lists, 404s and refused links match, with these differences:
+  `owner` in a body is ignored rather than a 400 `Invalid key owner`; deleting someone else's
+  document is a 404 rather than a 204; a refused link says `locale ""` (CAMIS recorded the
+  strapi-php message that hynding/strapi-php#29 fixes); and its refresh tokens are opaque rather
+  than JWTs.
+- Deleting a story that still has plot lines or scenes, or a character that has arcs, is a 400
+  `Validation failed` on CAMIS; Strapi unlinks them and deletes. Found by `ownership.json`, with an
+  API token too, so not an ownership rule.
 - An app built before camis#66 keeps second-precision timestamp columns on MySQL/Postgres until they
   are rebuilt (`php artisan migrate:fresh` plus an import, or recreate the tables).
 
@@ -162,10 +226,17 @@ the backends' responses are diffed against the reference (Strapi on Node when it
 first one listed) with ids and timestamps masked. A backend can take a token instead of signing in
 (`CMS_PHP_TOKEN`, `CMS_NODE_TOKEN`, `CMS_CAMIS_TOKEN`).
 
+A step runs with the API token unless it sets `auth`: `"none"` sends no credentials, and a saved
+value such as `"{{alice}}"` (the `jwt` of a sign-up) acts as that user. A fixture's `grants` are
+switched on for the Authenticated role first, keeping the role's other permissions, so
+`ownership.json` leaves the Authenticated role with the grants the PWA needs. In the diff, a JWT
+is compared by its claim names, and a saved value quoted in a message by its name.
+
 ### Known differences
 
-- **Plugins enabled by default**: `hynding/strapi-php` is one package, so the PHP app also has GraphQL
-  (`/graphql`), documentation and sentry, which a vanilla Node app does not.
+- **Plugins enabled by default**: `hynding/strapi-php` is one package, so it also enables GraphQL,
+  documentation and sentry, which a vanilla Node app does not have. `apps/cms-php/config/plugins.php`
+  turns them off.
 
 ## Versions
 

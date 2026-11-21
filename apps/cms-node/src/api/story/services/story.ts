@@ -1,7 +1,7 @@
 /**
- * story service
+ * story service: the core service, restricted to the signed-in user's own documents
  */
 
-import { factories } from '@strapi/strapi';
+import { ownedService } from '../../../utils/ownership';
 
-export default factories.createCoreService('api::story.story');
+export default ownedService('api::story.story');

@@ -46,6 +46,12 @@
       "relation": "manyToMany",
       "target": "api::scene.scene",
       "mappedBy": "plotLines"
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "private": true
     }
   }
 }
