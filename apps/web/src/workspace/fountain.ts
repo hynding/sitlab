@@ -58,3 +58,106 @@ export function downloadFountain(story: Pick<StoryDetail, 'title' | 'logline' | 
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 0)
 }
+
+// --- import -----------------------------------------------------------------------------------
+
+/** A scene read from a Fountain file, shaped like the scene fields it fills. */
+export type ImportedScene = {
+  title: string
+  location: string | null
+  timeOfDay: Scene['timeOfDay']
+  summary: string | null
+  screenplay: string | null
+}
+
+export type ImportedScript = { title: string | null; scenes: ImportedScene[] }
+
+const headingLine = /^(?:(?:int|ext|est|int\.?\/ext|i\/e)[. ]|\.(?=[^.\s]))/i
+const titleKey = /^([A-Za-z][A-Za-z ]*):(.*)$/
+
+/** Time-of-day words that map onto the scene's choices; anything else stays part of the location. */
+const times: Record<string, Scene['timeOfDay']> = {
+  DAY: 'day',
+  NIGHT: 'night',
+  DAWN: 'dawn',
+  DUSK: 'dusk',
+  CONTINUOUS: 'continuous',
+  MORNING: 'dawn',
+  SUNRISE: 'dawn',
+  EVENING: 'dusk',
+  SUNSET: 'dusk',
+}
+
+/** 'INT. LIGHTHOUSE - NIGHT #12#' → location 'INT. LIGHTHOUSE', time 'night'. A forced '.HEADING' loses its dot. */
+export function readHeading(line: string): Pick<ImportedScene, 'title' | 'location' | 'timeOfDay'> {
+  let text = line.trim().replace(/\s*#[^#]*#\s*$/, '')
+  if (text.startsWith('.')) text = text.slice(1).trim()
+  let timeOfDay: Scene['timeOfDay'] = null
+  const dash = /^(.*\S)\s+[-–—]\s+([^-–—]+)$/.exec(text)
+  if (dash && times[dash[2].trim().toUpperCase()]) {
+    text = dash[1]
+    timeOfDay = times[dash[2].trim().toUpperCase()]
+  }
+  const place = text.replace(/^(int\.?\/ext|i\/e|int|ext|est)[. ]\s*/i, '').trim() || text
+  const title = place.toLowerCase().replace(/(^|[\s/-])\p{L}/gu, (m) => m.toUpperCase())
+  return { title, location: text.toUpperCase(), timeOfDay }
+}
+
+/**
+ * Reads a Fountain screenplay into scenes: every scene heading starts one, the `=` synopsis lines
+ * right after it become the summary, and the rest is its screenplay text, kept as written.
+ * Text before the first heading (FADE IN:, a cold open) goes to the top of the first scene.
+ */
+export function fromFountain(source: string): ImportedScript {
+  let lines = source.replace(/^﻿/, '').replace(/\r\n?/g, '\n').split('\n')
+
+  // the title page: key: value lines (values may continue on indented lines) up to the first blank line
+  let title: string | null = null
+  if (titleKey.test(lines[0] ?? '') && !headingLine.test(lines[0])) {
+    const end = lines.findIndex((l) => !l.trim())
+    const page = lines.slice(0, end === -1 ? lines.length : end)
+    let key = ''
+    const values: Record<string, string[]> = {}
+    for (const line of page) {
+      const kv = /^\s/.test(line) ? null : titleKey.exec(line)
+      if (kv) {
+        key = kv[1].trim().toLowerCase()
+        values[key] = kv[2].trim() ? [kv[2].trim()] : []
+      } else if (key) values[key].push(line.trim())
+    }
+    title = values.title?.join(' ').replace(/[*_]/g, '').trim() || null
+    lines = lines.slice(page.length)
+  }
+
+  const scenes: ImportedScene[] = []
+  const preamble: string[] = []
+  let body: string[] = preamble
+  for (const [i, line] of lines.entries()) {
+    const startsBlock = i === 0 || !lines[i - 1].trim()
+    if (startsBlock && headingLine.test(line.trim())) {
+      const scene = { ...readHeading(line), summary: null, screenplay: null, lines: [] as string[] }
+      scenes.push(scene as ImportedScene & { lines: string[] })
+      body = scene.lines
+      continue
+    }
+    body.push(line)
+  }
+
+  const finished = (scenes as (ImportedScene & { lines: string[] })[]).map(({ lines: own, ...scene }, i) => {
+    const text = own.join('\n').trim().split('\n')
+    const synopsis: string[] = []
+    while (text.length && /^=(?!==)/.test(text[0].trim())) synopsis.push(text.shift()!.trim().slice(1).trim())
+    const opening = i === 0 ? preamble.join('\n').trim() : ''
+    const screenplay = [opening, text.join('\n').trim()].filter(Boolean).join('\n\n')
+    return { ...scene, summary: synopsis.join('\n') || null, screenplay: screenplay || null }
+  })
+
+  if (finished.length === 0) {
+    const screenplay = preamble.join('\n').trim()
+    if (screenplay) finished.push({ title: 'Scene 1', location: null, timeOfDay: null, summary: null, screenplay })
+  }
+  return { title, scenes: finished }
+}
+
+/** Reads a chosen .fountain (or .txt) file. */
+export const readFountainFile = async (file: File) => fromFountain(await file.text())

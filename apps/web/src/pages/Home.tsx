@@ -17,7 +17,11 @@ const features = [
   },
   {
     title: 'Scenes and storyboards',
-    text: 'Order your scenes, set the time and place, write the screenplay and sketch the shots frame by frame.',
+    text: 'Order your scenes, set the time and place, and sketch the shots frame by frame.',
+  },
+  {
+    title: 'Screenplays',
+    text: 'Write the script in standard screenplay format, scene by scene, with your characters on cue. Import and export Fountain, or print a PDF.',
   },
   {
     title: 'Research',

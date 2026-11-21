@@ -3,6 +3,7 @@ import { backends, canSwitchBackend, defaultBackend, signOut, type Backend } fro
 import { Auth } from './pages/Auth'
 import { Home } from './pages/Home'
 import { Stories } from './pages/Stories'
+import { Screenplay } from './pages/Screenplay'
 import { StoryWorkspace } from './pages/StoryWorkspace'
 import { currentRoute, go, type Route } from './router'
 import { useSession } from './session'
@@ -28,7 +29,7 @@ function App() {
           Sitlab
         </a>
         <nav>
-          <a href="#/stories" aria-current={route.name === 'stories' || route.name === 'story' ? 'page' : undefined}>
+          <a href="#/stories" aria-current={route.name === 'stories' || route.name === 'story' || route.name === 'screenplay' ? 'page' : undefined}>
             Stories
           </a>
           {session ? (
@@ -74,6 +75,7 @@ function App() {
         {route.name === 'home' && <Home signedIn={session !== null} />}
         {route.name === 'stories' && <Stories backend={backend} signedIn={session !== null} />}
         {route.name === 'story' && <StoryWorkspace key={route.id} id={route.id} backend={backend} signedIn={session !== null} />}
+        {route.name === 'screenplay' && <Screenplay key={route.id} id={route.id} backend={backend} signedIn={session !== null} />}
         {(route.name === 'signin' || route.name === 'signup') && <Auth key={route.name} mode={route.name} backend={backend} />}
       </main>
     </>
