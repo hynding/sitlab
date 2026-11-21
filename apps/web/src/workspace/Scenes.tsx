@@ -40,11 +40,18 @@ export function Scenes() {
     <section className="ws-section" aria-labelledby="scenes">
       <div className="section-head">
         <h2 id="scenes">Scenes</h2>
-        {scenes.length > 0 && (
-          <button type="button" className="secondary" onClick={() => downloadFountain(story)} title="A Fountain file opens in Highland, Fade In, WriterSolo and Final Draft">
-            Export screenplay
-          </button>
-        )}
+        <div className="row">
+          {(scenes.length > 0 || canEdit) && (
+            <a className="button" href={`#/stories/${encodeURIComponent(story.documentId)}/screenplay`}>
+              {canEdit ? 'Write screenplay' : 'Read screenplay'}
+            </a>
+          )}
+          {scenes.length > 0 && (
+            <button type="button" className="secondary" onClick={() => downloadFountain(story)} title="A Fountain file opens in Highland, Fade In, WriterSolo and Final Draft">
+              Export .fountain
+            </button>
+          )}
+        </div>
       </div>
       {scenes.length === 0 && <p className="muted">No scenes yet.</p>}
       <ol className="cards">

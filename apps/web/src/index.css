@@ -661,3 +661,342 @@ pre.screenplay {
 .file-button:focus-within {
   outline: 2px solid var(--accent);
 }
+
+/* Screenplay editor: one page in standard screenplay layout (Courier, 10 characters an inch) */
+
+.print-only {
+  display: none;
+}
+
+.sp-head h1 {
+  margin-bottom: 0.25rem;
+}
+
+.sp-head p {
+  margin-top: 0;
+}
+
+.sp-error {
+  color: #c2410c;
+}
+
+.sp-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.sp-toolbar [role='group'],
+.sp-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.sp-files {
+  margin-left: auto;
+}
+
+.sp-toolbar button {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.875rem;
+}
+
+.sp-hint {
+  font-size: 0.8125rem;
+}
+
+.sp-layout {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 60rem) {
+  .sp-layout:has(.sp-nav) {
+    grid-template-columns: 12rem 1fr;
+  }
+
+  .sp-nav {
+    position: sticky;
+    top: 3.5rem;
+    align-self: start;
+    max-height: calc(100vh - 4.5rem);
+    overflow: auto;
+  }
+}
+
+@media (max-width: 59.99rem) {
+  .sp-nav {
+    display: none;
+  }
+}
+
+.sp-nav ol {
+  margin: 0;
+  padding-left: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.sp-nav button {
+  text-align: left;
+}
+
+.sp-page {
+  --sp-text: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.5rem clamp(0.75rem, 4vw, 3rem) 2rem;
+  font: 1rem/1.25 'Courier Prime', 'Courier New', Courier, monospace;
+  color: var(--sp-text);
+  min-width: 0;
+}
+
+.sp-page > * {
+  max-width: 61ch;
+}
+
+.sp-edit > div + div {
+  margin-top: 2rem;
+}
+
+.sp-margin {
+  font: 0.75rem/1.2 system-ui, sans-serif;
+  margin-bottom: 0.25rem;
+}
+
+.sp-el {
+  margin-top: 1.25em;
+  position: relative;
+}
+
+.sp-heading {
+  margin-top: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.sp-el p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* within a speech: cue, parentheticals and lines follow on without a blank line */
+.sp-character + .sp-dialogue,
+.sp-character + .sp-parenthetical,
+.sp-parenthetical + .sp-dialogue,
+.sp-parenthetical + .sp-parenthetical,
+.sp-dialogue + .sp-parenthetical,
+.sp-dialogue + .sp-dialogue {
+  margin-top: 0;
+}
+
+.sp-character {
+  margin-left: min(22ch, 35%);
+  text-transform: uppercase;
+}
+
+.sp-parenthetical {
+  margin-left: min(16ch, 25%);
+  max-width: 28ch;
+  display: flex;
+}
+
+.sp-dialogue {
+  margin-left: min(10ch, 15%);
+  max-width: 36ch;
+}
+
+.sp-transition {
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.sp-page input,
+.sp-page textarea,
+.sp-page select {
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  text-align: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  padding: 0 0.15rem;
+  margin: 0 -0.15rem;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sp-page .sp-heading input {
+  width: auto;
+  flex: 0 1 auto;
+  font-weight: 700;
+}
+
+.sp-page .sp-heading select {
+  width: auto;
+  flex: 0 0 auto;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sp-page textarea.sp-fountain {
+  margin-top: 1rem;
+  border: 1px dashed var(--border);
+  padding: 0.5rem;
+  min-height: 4lh;
+}
+
+.sp-page input:focus,
+.sp-page textarea:focus,
+.sp-page select:focus {
+  outline: none;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.sp-page ::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* the element type, in the left margin of the line being edited */
+.sp-el[data-type]:focus-within::before {
+  content: attr(data-type);
+  position: absolute;
+  right: 100%;
+  margin-right: 0.75rem;
+  top: 0.2em;
+  font: 0.6875rem/1 system-ui, sans-serif;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+@media (max-width: 40rem) {
+  .sp-el[data-type]:focus-within::before {
+    display: none;
+  }
+}
+
+.sp-cast {
+  margin: 0.5rem 0 0;
+  font: 0.8125rem system-ui, sans-serif;
+}
+
+.sp-cast button.tag {
+  cursor: pointer;
+  border-style: dashed;
+  background: none;
+  color: var(--accent);
+}
+
+.sp-page input::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.sp-new {
+  font-family: system-ui, sans-serif;
+  margin-top: 2rem;
+}
+
+.sp-print .sp-scene + .sp-scene {
+  margin-top: 1.25em;
+}
+
+@media print {
+  @page {
+    size: letter;
+    margin: 1in 1in 1in 1.5in;
+  }
+
+  :root,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .site-header,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .sp-layout {
+    display: block;
+    margin: 0;
+  }
+
+  .sp-page {
+    border: 0;
+    padding: 0;
+    background: none;
+    color: #000;
+    font: 12pt/12pt 'Courier Prime', 'Courier New', Courier, monospace;
+  }
+
+  .sp-page > * {
+    max-width: 6in;
+  }
+
+  .sp-title-page {
+    height: 8.5in;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    break-after: page;
+  }
+
+  .sp-title {
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .sp-el {
+    margin-top: 12pt;
+  }
+
+  .sp-heading,
+  .sp-character,
+  .sp-parenthetical {
+    break-after: avoid;
+  }
+
+  .sp-character {
+    margin-left: 2.2in;
+  }
+
+  .sp-parenthetical {
+    margin-left: 1.6in;
+    max-width: 2in;
+  }
+
+  .sp-dialogue {
+    margin-left: 1in;
+    max-width: 3.5in;
+  }
+}

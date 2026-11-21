@@ -1,0 +1,274 @@
+{
+  "description": "What the screenplay editor sends: Fountain scenes imported with their cast, autosaved text and heading, speakers added as characters",
+  "grants": [
+    "api::story.story.find",
+    "api::story.story.findOne",
+    "api::story.story.create",
+    "api::story.story.update",
+    "api::character.character.find",
+    "api::character.character.findOne",
+    "api::character.character.create",
+    "api::character.character.update",
+    "api::scene.scene.find",
+    "api::scene.scene.findOne",
+    "api::scene.scene.create",
+    "api::scene.scene.update"
+  ],
+  "steps": [
+    {
+      "note": "the screenplay editor runs as a signed-in writer",
+      "auth": "none",
+      "request": {
+        "method": "POST",
+        "path": "/api/auth/local/register",
+        "body": {
+          "username": "writer-{{run}}",
+          "email": "writer-{{run}}@sitlab.local",
+          "password": "Writer-password-1"
+        }
+      },
+      "expect": {
+        "status": 200
+      },
+      "save": {
+        "writer": "jwt"
+      }
+    },
+    {
+      "auth": "{{writer}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/stories",
+        "body": {
+          "data": {
+            "title": "Lamp ({{run}})",
+            "format": "short"
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "story": "data.documentId"
+      }
+    },
+    {
+      "auth": "{{writer}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Ada {{run}}",
+            "role": "protagonist",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "ada": "data.documentId"
+      }
+    },
+    {
+      "note": "Import .fountain: one scene per heading, with the speakers who are story characters",
+      "auth": "{{writer}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/scenes",
+        "body": {
+          "data": {
+            "title": "Cliff Path",
+            "location": "EXT. CLIFF PATH",
+            "timeOfDay": "dusk",
+            "summary": "Ben finds the gate open.",
+            "screenplay": "FADE IN:\n\nWind. BEN pushes the gate — it's open.\n\nBEN\n(calling up)\nAda? You up there?\n\nADA (O.S.)\nWho's asking?\n\n[[keep the lamp dark until here]]\n\n> SMASH CUT TO:",
+            "position": 0,
+            "story": "{{story}}",
+            "characters": {
+              "connect": [
+                "{{ada}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201,
+        "body": {
+          "data": {
+            "title": "Cliff Path",
+            "location": "EXT. CLIFF PATH",
+            "timeOfDay": "dusk",
+            "screenplay": "FADE IN:\n\nWind. BEN pushes the gate — it's open.\n\nBEN\n(calling up)\nAda? You up there?\n\nADA (O.S.)\nWho's asking?\n\n[[keep the lamp dark until here]]\n\n> SMASH CUT TO:"
+          }
+        }
+      },
+      "save": {
+        "scene": "data.documentId"
+      }
+    },
+    {
+      "note": "a speaker who is not a character yet is added to the story, then to the scene",
+      "auth": "{{writer}}",
+      "request": {
+        "method": "POST",
+        "path": "/api/characters",
+        "body": {
+          "data": {
+            "name": "Ben {{run}}",
+            "role": "minor",
+            "stories": {
+              "connect": [
+                "{{story}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 201
+      },
+      "save": {
+        "ben": "data.documentId"
+      }
+    },
+    {
+      "auth": "{{writer}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{scene}}",
+        "body": {
+          "data": {
+            "characters": {
+              "connect": [
+                "{{ben}}"
+              ]
+            }
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "note": "autosave: the scene's Fountain text and heading",
+      "auth": "{{writer}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{scene}}",
+        "body": {
+          "data": {
+            "screenplay": "The lamp is lit.\n\n@McCoy\nI lit it.\n\n!SILENCE.\n\n>THE END<",
+            "location": "INT. LAMP ROOM",
+            "timeOfDay": null
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "screenplay": "The lamp is lit.\n\n@McCoy\nI lit it.\n\n!SILENCE.\n\n>THE END<",
+            "location": "INT. LAMP ROOM",
+            "timeOfDay": null
+          }
+        }
+      }
+    },
+    {
+      "note": "an emptied scene saves as null",
+      "auth": "{{writer}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{scene}}",
+        "body": {
+          "data": {
+            "screenplay": null,
+            "location": null,
+            "timeOfDay": "night"
+          }
+        }
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "screenplay": null,
+            "location": null,
+            "timeOfDay": "night"
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{writer}}",
+      "request": {
+        "method": "PUT",
+        "path": "/api/scenes/{{scene}}",
+        "body": {
+          "data": {
+            "screenplay": "FADE IN:\n\nWind. BEN pushes the gate — it's open.\n\nBEN\n(calling up)\nAda? You up there?\n\nADA (O.S.)\nWho's asking?\n\n[[keep the lamp dark until here]]\n\n> SMASH CUT TO:",
+            "location": "EXT. CLIFF PATH",
+            "timeOfDay": "dusk"
+          }
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    },
+    {
+      "note": "the workspace reads it back, cast and all",
+      "auth": "{{writer}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/stories/{{story}}?populate[scenes][populate][characters][fields][0]=name&populate[scenes][sort][0]=position:asc"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "scenes": [
+              {
+                "title": "Cliff Path",
+                "summary": "Ben finds the gate open.",
+                "screenplay": "FADE IN:\n\nWind. BEN pushes the gate — it's open.\n\nBEN\n(calling up)\nAda? You up there?\n\nADA (O.S.)\nWho's asking?\n\n[[keep the lamp dark until here]]\n\n> SMASH CUT TO:"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "auth": "{{writer}}",
+      "request": {
+        "method": "GET",
+        "path": "/api/scenes/{{scene}}?populate[characters][fields][0]=name&populate[characters][sort][0]=name:asc"
+      },
+      "expect": {
+        "status": 200,
+        "body": {
+          "data": {
+            "characters": [
+              {
+                "name": "Ada {{run}}"
+              },
+              {
+                "name": "Ben {{run}}"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

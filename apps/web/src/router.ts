@@ -5,13 +5,14 @@ export type Route =
   | { name: 'signin' }
   | { name: 'signup' }
   | { name: 'story'; id: string }
+  | { name: 'screenplay'; id: string }
 
 const simple = ['stories', 'signin', 'signup'] as const
 
 export function currentRoute(): Route {
   const path = window.location.hash.replace(/^#\/?/, '')
-  const story = /^stories\/([^/]+)$/.exec(path)
-  if (story) return { name: 'story', id: decodeURIComponent(story[1]) }
+  const story = /^stories\/([^/]+)(\/screenplay)?$/.exec(path)
+  if (story) return { name: story[2] ? 'screenplay' : 'story', id: decodeURIComponent(story[1]) }
   const name = simple.find((r) => r === path)
   return name ? { name } : { name: 'home' }
 }
@@ -19,9 +20,10 @@ export function currentRoute(): Route {
 export function href(route: Route): string {
   if (route.name === 'home') return '#/'
   if (route.name === 'story') return `#/stories/${encodeURIComponent(route.id)}`
+  if (route.name === 'screenplay') return `#/stories/${encodeURIComponent(route.id)}/screenplay`
   return `#/${route.name}`
 }
 
-export function go(route: Route | Exclude<Route['name'], 'story'>): void {
+export function go(route: Route | Exclude<Route['name'], 'story' | 'screenplay'>): void {
   window.location.hash = href(typeof route === 'string' ? ({ name: route } as Route) : route).slice(1)
 }

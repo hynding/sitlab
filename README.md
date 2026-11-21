@@ -69,10 +69,29 @@ character arcs (start and end state, turning points), plot lines with beats tagg
 order with their cast, plot lines, storyboard and screenplay, and research.
 `conformance/fixtures/workspace.json` and `arcs-and-storyboards.json` replay the requests it makes.
 
-**Export screenplay** (Scenes) downloads the story as one [Fountain](https://fountain.io) file: a title
-page, then each scene in order as a scene heading built from its location and time of day (a heading
-that does not start with INT./EXT. gets Fountain's leading dot), its summary as a synopsis line (`=`),
-and its screenplay text. Highland, Fade In, WriterSolo, Slugline and Final Draft open it.
+**Write screenplay** (Scenes) opens the screenplay editor (`#/stories/<documentId>/screenplay`): every
+scene in order as one script in standard screenplay layout, with no content-model change. A scene's
+heading is its location and time of day, and its body is the scene's `screenplay` field, which holds
+[Fountain](https://fountain.io) text.
+
+- **Formatted** view edits line by line like a screenwriting app: Enter starts the next element
+  (character → dialogue → action), Tab and Shift+Tab change the element type, Shift+Enter breaks a line,
+  and a story character's name typed in capitals becomes a cue. Cues suggest the story's characters.
+- **Fountain** view edits each scene's body as plain Fountain. Both views save the same text, and
+  Fountain the editor has no element for (notes, sections, centered text, `!`/`@`/`>` forcing) is kept.
+- Edits save a second after typing stops. Saving adds every story character who speaks in a scene to
+  that scene's cast; a speaker who is not a character yet gets a "+ Name" chip that adds them.
+- **Import .fountain** adds a file's scenes after the story's: each scene heading becomes a scene
+  (location, time of day, a title from the place), `=` synopsis lines become its summary, text before
+  the first heading goes to the first scene, and speakers who are story characters join its cast.
+- **Export .fountain** (here and on the Scenes section) downloads the story as one Fountain file: a
+  title page, then each scene's heading (one that does not start with INT./EXT. gets Fountain's leading
+  dot), summary as a synopsis line (`=`) and text. Highland, Fade In, WriterSolo, Slugline and Final
+  Draft open it, and Import reads it back scene for scene.
+- **Print / PDF** prints in screenplay format (US Letter, Courier 12pt, 1.5in left margin) with a title page.
+
+The editor needs no grants beyond the workspace's. `conformance/fixtures/screenplay.json` replays its
+requests as a signed-in writer, and `npm --prefix apps/web test` runs the Fountain parser's tests.
 
 The Research section searches Wikipedia or Wikidata from the browser (no CMS code involved; set
 `VITE_RESEARCH_LANG` for another Wikipedia language) and keeps what you attach as a Source: title, URL,
